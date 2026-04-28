@@ -17,10 +17,6 @@ public class UtilityPlus extends JavaPlugin {
     private TPAManager   tpaManager;
     private ChatManager  chatManager;
     private TeamManager  teamManager;
-    private StatsManager statsManager;
-    private VanishCommand vanishCommand;
-    private TickMonitor tickMonitor;
-    private CpuMonitor  cpuMonitor;
 
     @Override
     public void onEnable() {
@@ -32,9 +28,6 @@ public class UtilityPlus extends JavaPlugin {
         tpaManager   = new TPAManager(this);
         chatManager  = new ChatManager();
         teamManager  = new TeamManager(this);
-        statsManager = new StatsManager(this);
-        tickMonitor  = new TickMonitor(this);
-        cpuMonitor   = new CpuMonitor(this);
 
         // ── Executors ─────────────────────────────────────────────────
         // Spawn
@@ -76,8 +69,7 @@ public class UtilityPlus extends JavaPlugin {
         getCommand("upreload").setExecutor(new ReloadCommand(this));
 
         // Vanish
-        vanishCommand = new VanishCommand(this);
-        getCommand("v").setExecutor(vanishCommand);
+        getCommand("v").setExecutor(new VanishCommand(this));
 
         // Broadcast
         BroadcastCommand bcCmd = new BroadcastCommand(this);
@@ -91,25 +83,6 @@ public class UtilityPlus extends JavaPlugin {
         getCommand("gmsp").setExecutor(gmCmd);
         getCommand("gma").setExecutor(gmCmd);
 
-        // Kill
-        getCommand("kill").setExecutor(new KillCommand());
-
-        // Summon
-        getCommand("s").setExecutor(new STapwarp());
-
-        // Help
-        getCommand("helps").setExecutor(new HelpsCommand());
-
-        // Stats
-        StatsCommand statsCmd = new StatsCommand(statsManager);
-        getCommand("stats").setExecutor(statsCmd);
-        getCommand("topstats").setExecutor(statsCmd);
-
-        // TPS More
-        TPSMoreCommand tpsMoreCmd = new TPSMoreCommand(tickMonitor, cpuMonitor);
-        getCommand("tpsmore").setExecutor(tpsMoreCmd);
-        getCommand("tps").setExecutor(tpsMoreCmd);
-
         // ── Tab Completers ────────────────────────────────────────────
         TabCompleterManager tab = new TabCompleterManager(homeManager, teamManager);
         List<String> allCmds = Arrays.asList(
@@ -119,8 +92,7 @@ public class UtilityPlus extends JavaPlugin {
             "chat","chatsettings",
             "msg","tell","w","whisper","dm","pm","r","reply",
             "team","upreload",
-            "v","bc","broadcast","gmc","gms","gmsp","gma","kill","s","helps",
-            "stats", "topstats", "tpsmore", "tps"
+            "v","bc","broadcast","gmc","gms","gmsp","gma"
         );
         for (String c : allCmds) getCommand(c).setTabCompleter(tab);
 
@@ -132,9 +104,6 @@ public class UtilityPlus extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AnvilListener(), this);
         getServer().getPluginManager().registerEvents(new TeamListener(teamManager), this);
         getServer().getPluginManager().registerEvents(new JoinMessageListener(this), this);
-        getServer().getPluginManager().registerEvents(new StatsListener(statsManager), this);
-        getServer().getPluginManager().registerEvents(new StatsGUIListener(), this);
-        getServer().getPluginManager().registerEvents(new VanishListener(this, vanishCommand), this);
 
         getLogger().info("UtilityPlus enabled!");
     }
@@ -144,7 +113,6 @@ public class UtilityPlus extends JavaPlugin {
         if (spawnManager != null) spawnManager.saveData();
         if (homeManager  != null) homeManager.saveData();
         if (teamManager  != null) teamManager.saveData();
-        if (statsManager != null) statsManager.saveData();
         getLogger().info("UtilityPlus disabled!");
     }
 
@@ -153,5 +121,4 @@ public class UtilityPlus extends JavaPlugin {
     public TPAManager   getTpaManager()   { return tpaManager; }
     public ChatManager  getChatManager()  { return chatManager; }
     public TeamManager  getTeamManager()  { return teamManager; }
-    public StatsManager getStatsManager() { return statsManager; }
 }

@@ -26,17 +26,11 @@ public class SpawnManager {
     private String pendingWorldName = null;
 
     // Config flags
-    private boolean tpOnFirstJoin;
-    private boolean tpOnDeath;
-    private boolean tpNoRespawnPoint;
-    private int cooldownSeconds;
-    private int warmupSeconds;
-
-    // Random Spawn Settings
-    private boolean rtpEnabled;
-    private int rtpMinRadius;
-    private int rtpMaxRadius;
-    private String rtpWorldName;
+    private final boolean tpOnFirstJoin;
+    private final boolean tpOnDeath;
+    private final boolean tpNoRespawnPoint;
+    private final int cooldownSeconds;
+    private final int warmupSeconds;
 
     // Cooldown tracker: UUID -> last /spawn use timestamp (ms)
     private final Map<UUID, Long> cooldowns = new HashMap<>();
@@ -50,11 +44,8 @@ public class SpawnManager {
 
     public SpawnManager(UtilityPlus plugin) {
         this.plugin = plugin;
-        readConfig();
-        loadData();
-    }
 
-    private void readConfig() {
+        // Read config
         FileConfiguration cfg = plugin.getConfig();
         this.tpOnFirstJoin    = cfg.getBoolean("spawn.tp-spawn-first-join",      true);
         this.tpOnDeath        = cfg.getBoolean("spawn.tp-spawn-on-death",         true);
@@ -62,10 +53,7 @@ public class SpawnManager {
         this.cooldownSeconds  = cfg.getInt    ("spawn.tp-spawn-cooldown",         30);
         this.warmupSeconds    = cfg.getInt    ("spawn.tp-spawn-warmup",           5);
 
-        this.rtpEnabled   = cfg.getBoolean("spawn.random-spawn.enabled",     true);
-        this.rtpMinRadius = cfg.getInt    ("spawn.random-spawn.min-radius",  500);
-        this.rtpMaxRadius = cfg.getInt    ("spawn.random-spawn.max-radius",  5000);
-        this.rtpWorldName = cfg.getString ("spawn.random-spawn.world",       "world");
+        loadData();
     }
 
     // ---------------------------------------------------------------
@@ -235,7 +223,6 @@ public class SpawnManager {
         spawnLocation   = null;
         pendingWorldName = null;
         knownPlayers.clear();
-        readConfig();
         loadData();
         plugin.getLogger().info("[SpawnManager] Reloaded.");
     }
@@ -247,42 +234,6 @@ public class SpawnManager {
     public boolean isTpOnFirstJoin()    { return tpOnFirstJoin; }
     public boolean isTpOnDeath()        { return tpOnDeath; }
     public boolean isTpNoRespawnPoint() { return tpNoRespawnPoint; }
-    public boolean isRtpEnabled()       { return rtpEnabled; }
-
-    public Location getRandomLocation() {
-        World world = Bukkit.getWorld(rtpWorldName);
-        if (world == null) {
-            world = Bukkit.getWorlds().get(0);
-        }
-
-        java.util.Random random = new java.util.Random();
-        int x, z;
-        int attempts = 0;
-        Location loc;
-
-        while (attempts < 10) {
-            int range = rtpMaxRadius - rtpMinRadius;
-            x = (random.nextInt(range * 2) - range) + (random.nextBoolean() ? rtpMinRadius : -rtpMinRadius);
-            z = (random.nextInt(range * 2) - range) + (random.nextBoolean() ? rtpMinRadius : -rtpMinRadius);
-
-            loc = world.getHighestBlockAt(x, z).getLocation().add(0.5, 1, 0.5);
-
-            if (isSafeLocation(loc)) {
-                return loc;
-            }
-            attempts++;
-        }
-
-        return spawnLocation != null ? spawnLocation : world.getSpawnLocation();
-    }
-
-    private boolean isSafeLocation(Location loc) {
-        org.bukkit.block.Block feet = loc.getBlock();
-        org.bukkit.block.Block head = loc.clone().add(0, 1, 0).getBlock();
-        org.bukkit.block.Block ground = loc.clone().add(0, -1, 0).getBlock();
-
-        return feet.getType().isAir() && head.getType().isAir() && ground.getType().isSolid() && !ground.isLiquid();
-    }
 
     // ---------------------------------------------------------------
     // First-join tracking

@@ -1,7 +1,7 @@
 name: UtilityPlus
 version: 1.0.0
 main: com.example.utilityplus.UtilityPlus
-api-version: '1.21'
+api-version: 1.20
 folia-supported: true
 description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
 author: CADS
@@ -150,43 +150,7 @@ commands:
     usage: /gma [player]
     permission: utilityplus.gamemode
 
-  kill:
-    description: Kill yourself (needs confirmation) or another player
-    usage: /kill [player]
-    permission: utilityplus.kill
-
-  s:
-    description: Summon a player to your location
-    usage: /s <player>
-    permission: utilityplus.summon
-
-  helps:
-    description: Show UtilityPlus help menu
-    usage: /helps [page]
-    permission: utilityplus.helps
-
-  stats:
-    description: View your kills and deaths
-    usage: /stats [player]
-    permission: utilityplus.stats
-  topstats:
-    description: View the top killers and deaths in a GUI
-    usage: /topstats
-    permission: utilityplus.topstats
-
-  tpsmore:
-    description: Show detailed TPS and performance info
-    usage: /tpsmore [show]
-    permission: utilityplus.tpsmore
-  tps:
-    description: Show detailed TPS and performance info (Async)
-    usage: /tps [show]
-    permission: utilityplus.tpsmore
-
 permissions:
-  utilityplus.helps:
-    description: Access the plugin help menu
-    default: true
   utilityplus.setspawn:
     description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
     default: op
@@ -234,16 +198,4 @@ permissions:
     default: op
   utilityplus.gamemode.others:
     description: Change other players' gamemode
-    default: op
-  utilityplus.summon:
-    description: Summon other players to your location
-    default: op
-  utilityplus.stats:
-    description: View kills and deaths
-    default: true
-  utilityplus.topstats:
-    description: View the top players GUI
-    default: true
-  utilityplus.tpsmore:
-    description: View detailed TPS and performance info
     default: op

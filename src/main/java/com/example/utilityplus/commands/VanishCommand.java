@@ -1,11 +1,12 @@
 package com.example.utilityplus.commands;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -22,10 +23,12 @@ public class VanishCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage("§cThis command can only be used by players.");
             return true;
         }
+
+        Player player = (Player) sender;
 
         if (!player.hasPermission("utilityplus.vanish")) {
             player.sendMessage("§cYou don't have permission to use this command.");
@@ -35,10 +38,22 @@ public class VanishCommand implements CommandExecutor {
         UUID uuid = player.getUniqueId();
 
         if (vanishedPlayers.contains(uuid)) {
-            setVanished(player, false);
+            // Unvanish
+            vanishedPlayers.remove(uuid);
+            player.removePotionEffect(PotionEffectType.INVISIBILITY);
+            for (Player online : plugin.getServer().getOnlinePlayers()) {
+                online.showPlayer(plugin, player);
+            }
             player.sendMessage("§aYou are now §evisible§a!");
         } else {
-            setVanished(player, true);
+            // Vanish
+            vanishedPlayers.add(uuid);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
+            for (Player online : plugin.getServer().getOnlinePlayers()) {
+                if (!online.hasPermission("utilityplus.vanish.see")) {
+                    online.hidePlayer(plugin, player);
+                }
+            }
             player.sendMessage("§aYou are now §7vanished§a!");
         }
 
@@ -53,35 +68,16 @@ public class VanishCommand implements CommandExecutor {
         UUID uuid = player.getUniqueId();
         if (vanished) {
             vanishedPlayers.add(uuid);
-            
-            // Following AchyMake/Minecraft-Essentials logic:
-            player.setInvisible(true);           // หายตัว (ไม่มี Effect/Particle)
-            player.setAllowFlight(true);         // บินได้
-            player.setInvulnerable(true);        // อมตะ (เลือกได้ตามความเหมาะสม)
-            player.setSleepingIgnored(true);     // ไม่ต้องนอน
-            player.setCollidable(false);         // ไม่มีแรงกระแทกกับคนอื่น
-            player.setSilent(true);              // ไม่มีเสียง (เดิน, กิน, ฯลฯ)
-            player.setCanPickupItems(false);     // ไม่เก็บไอเทม
-            
-            // Hide player from others who don't have permission to see vanished players
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                if (!online.hasPermission("utilityplus.vanish.see") && !online.equals(player)) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, false, false));
+            for (Player online : plugin.getServer().getOnlinePlayers()) {
+                if (!online.hasPermission("utilityplus.vanish.see")) {
                     online.hidePlayer(plugin, player);
                 }
             }
         } else {
             vanishedPlayers.remove(uuid);
-            
-            player.setInvisible(false);
-            player.setAllowFlight(player.hasPermission("utilityplus.fly")); // บินต่อถ้ามี Permission fly
-            player.setInvulnerable(false);
-            player.setSleepingIgnored(false);
-            player.setCollidable(true);
-            player.setSilent(false);
-            player.setCanPickupItems(true);
-            
-            // Show player to everyone
-            for (Player online : Bukkit.getOnlinePlayers()) {
+            player.removePotionEffect(PotionEffectType.INVISIBILITY);
+            for (Player online : plugin.getServer().getOnlinePlayers()) {
                 online.showPlayer(plugin, player);
             }
         }
