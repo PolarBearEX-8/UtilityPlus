@@ -33,14 +33,17 @@ public class SpawnListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (!spawnManager.isTpOnFirstJoin()) return;
-        if (!spawnManager.hasSpawn()) return;
 
         Player player = event.getPlayer();
 
         if (spawnManager.isFirstJoin(player.getUniqueId())) {
             spawnManager.markKnown(player.getUniqueId());
-            player.teleport(spawnManager.getSpawn());
-            player.sendMessage("§aWelcome to the server! You have been teleported to spawn.");
+            
+            // Only teleport to spawn on first join, NO RTP here.
+            if (spawnManager.hasSpawn()) {
+                player.teleport(spawnManager.getSpawn());
+                player.sendMessage("§aWelcome to the server! You have been teleported to spawn.");
+            }
         }
     }
 
@@ -49,14 +52,14 @@ public class SpawnListener implements Listener {
     // ---------------------------------------------------------------
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
-        if (!spawnManager.hasSpawn()) return;
-
         boolean hasBedSpawn = event.isBedSpawn() || event.isAnchorSpawn();
 
-        if (spawnManager.isTpOnDeath()) {
-            event.setRespawnLocation(spawnManager.getSpawn());
-        } else if (spawnManager.isTpNoRespawnPoint() && !hasBedSpawn) {
-            event.setRespawnLocation(spawnManager.getSpawn());
+        if (spawnManager.isTpOnDeath() || (spawnManager.isTpNoRespawnPoint() && !hasBedSpawn)) {
+            if (spawnManager.isRtpEnabled()) {
+                event.setRespawnLocation(spawnManager.getRandomLocation());
+            } else if (spawnManager.hasSpawn()) {
+                event.setRespawnLocation(spawnManager.getSpawn());
+            }
         }
     }
 }

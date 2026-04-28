@@ -1,6 +1,8 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '9.4.1'
+    id 'xyz.jpenilla.run-paper' version '3.0.2'
+    id 'de.undercouch.download' version '5.7.0'
 }
 
 group = 'com.example'
@@ -8,8 +10,8 @@ version = '1.0.0'
 description = 'EssentialsPlugin - SetSpawn, SetHome, RTP, SetWarp'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -21,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'dev.folia:folia-api:1.20.1-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
 }
 
 processResources {
@@ -36,6 +38,56 @@ processResources {
 shadowJar {
     archiveClassifier.set('')
     archiveFileName.set("${project.name}-${project.version}.jar")
+}
+
+// Winds-Studio/Leaf Configuration
+def leafVersion = "1.21.11"
+def leafBuild = "120"
+def leafJarName = "leaf-${leafVersion}-${leafBuild}.jar"
+def leafDownloadUrl = "https://github.com/Winds-Studio/Leaf/releases/download/ver-${leafVersion}/${leafJarName}"
+def serverDir = file("run")
+
+task downloadLeaf(type: Download) {
+    src leafDownloadUrl
+    dest new File(buildDir, leafJarName)
+    overwrite false
+}
+
+task setupServer(dependsOn: [downloadLeaf, shadowJar]) {
+    doLast {
+        if (!serverDir.exists()) serverDir.mkdirs()
+        
+        // Copy plugin to run/plugins
+        def pluginsDir = new File(serverDir, "plugins")
+        if (!pluginsDir.exists()) pluginsDir.mkdirs()
+        
+        copy {
+            from shadowJar.archiveFile
+            into pluginsDir
+        }
+        
+        // Create eula.txt
+        def eulaFile = new File(serverDir, "eula.txt")
+        if (!eulaFile.exists()) {
+            eulaFile.text = "eula=true"
+        }
+    }
+}
+
+task runLeaf(type: JavaExec, dependsOn: setupServer) {
+    group = "run paper"
+    mainClass = "-jar" 
+    args = [
+        downloadLeaf.dest.absolutePath,
+        "nogui"
+    ]
+    workingDir = serverDir
+    standardInput = System.in
+}
+
+// run-paper configuration (for standard Paper testing)
+runServer {
+    minecraftVersion("1.21.1")
 }
 
 build.dependsOn shadowJar

@@ -15,6 +15,15 @@ spawn:
   # Warmup (seconds) before teleporting — player must stand still. 0 = instant.
   tp-spawn-warmup: 5
 
+  # Random Spawn Settings
+  # If enabled, no-respawn-point teleports will be to a random location
+  random-spawn:
+    enabled: true
+    min-radius: 0
+    max-radius: 150
+    # The world name where random spawn should happen (default to world)
+    world: "world"
+
 # -----------------------------------------------
 # TPA Settings
 # -----------------------------------------------
