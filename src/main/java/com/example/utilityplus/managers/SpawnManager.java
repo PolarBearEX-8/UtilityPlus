@@ -62,10 +62,10 @@ public class SpawnManager {
         this.cooldownSeconds  = cfg.getInt    ("spawn.tp-spawn-cooldown",         30);
         this.warmupSeconds    = cfg.getInt    ("spawn.tp-spawn-warmup",           5);
 
-        this.rtpEnabled   = cfg.getBoolean("random-spawn.enabled",     true);
-        this.rtpMinRadius = cfg.getInt    ("random-spawn.min-radius",  50);
-        this.rtpMaxRadius = cfg.getInt    ("random-spawn.max-radius",  1000);
-        this.rtpWorldName = cfg.getString ("random-spawn.world",       "world");
+        this.rtpEnabled   = cfg.getBoolean("random-respawn.enabled",     true);
+        this.rtpMinRadius = cfg.getInt    ("random-respawn.min-radius",  50);
+        this.rtpMaxRadius = cfg.getInt    ("random-respawn.max-radius",  1000);
+        this.rtpWorldName = cfg.getString ("random-respawn.world",       "world");
     }
 
     // ---------------------------------------------------------------

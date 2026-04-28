@@ -98,7 +98,7 @@ public class UtilityPlus extends JavaPlugin {
         getCommand("s").setExecutor(new STapwarp());
 
         // Help
-        getCommand("helps").setExecutor(new HelpsCommand());
+        getCommand("helps").setExecutor(new HelpsCommand(this));
 
         // Stats
         StatsCommand statsCmd = new StatsCommand(statsManager);

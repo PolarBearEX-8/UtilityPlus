@@ -54,19 +54,20 @@ public class SpawnListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         boolean hasBedSpawn = event.isBedSpawn() || event.isAnchorSpawn();
 
-        // Priority: Bed/Anchor spawn first (if exists)
+        // Priority: Bed/Anchor spawn first
         if (hasBedSpawn) {
-            // Only override bed spawn if tp-on-death is explicitly enabled
-            if (!spawnManager.isTpOnDeath()) {
-                return; // Keep bed spawn
-            }
+            return; // Keep bed/anchor spawn, no random respawn
         }
 
-        // No bed spawn or force tp-on-death enabled
+        // No bed/anchor — use random respawn if enabled
+        if (spawnManager.isRtpEnabled()) {
+            event.setRespawnLocation(spawnManager.getRandomLocation());
+            return;
+        }
+
+        // Fallback to normal spawn if configured
         if (spawnManager.isTpNoRespawnPoint() || spawnManager.isTpOnDeath()) {
-            if (spawnManager.isRtpEnabled()) {
-                event.setRespawnLocation(spawnManager.getRandomLocation());
-            } else if (spawnManager.hasSpawn()) {
+            if (spawnManager.hasSpawn()) {
                 event.setRespawnLocation(spawnManager.getSpawn());
             }
         }

@@ -15,14 +15,17 @@ spawn:
   # Warmup (seconds) before teleporting — player must stand still. 0 = instant.
   tp-spawn-warmup: 5
 
-  # Random Spawn Settings
-  # If enabled, no-respawn-point teleports will be to a random location
-  random-spawn:
-    enabled: true
-    min-radius: 50
-    max-radius: 1000
-    # The world name where random spawn should happen (default to world)
-    world: "world"
+# -----------------------------------------------
+# Random Respawn Settings
+# (When enabled, players respawn at a random location on death)
+# Completely independent from the /setspawn system above.
+# -----------------------------------------------
+random-respawn:
+  enabled: false
+  min-radius: 0
+  max-radius: 200
+  # The world name where random respawn should happen (default to world)
+  world: "world"
 
 # -----------------------------------------------
 # TPA Settings
@@ -87,3 +90,69 @@ leave-message:
 broadcast:
   # Prefix shown before broadcast messages
   prefix: "&6&l[Broadcast]&r "
+
+# -----------------------------------------------
+# Help Messages Settings
+# -----------------------------------------------
+# Use & for color codes. Each page supports up to 5 lines.
+# Add more pages by creating '2:', '3:', etc.
+helps:
+  # Pages shown to normal players (non-OP)
+  normal:
+    '1':
+      - "&e/chatsettings &7- Open chat settings GUI"
+      - "&e/msg <player> <msg> &7- Send a private message"
+      - "&e/tell <player> <msg> &7- Alias for /msg"
+      - "&e/w <player> <msg> &7- Alias for /msg"
+      - "&e/whisper <player> <msg> &7- Alias for /msg"
+    '2':
+      - "&e/dm <player> <msg> &7- Alias for /msg"
+      - "&e/pm <player> <msg> &7- Alias for /msg"
+      - "&e/r <msg> &7- Reply to the last private message"
+      - "&e/reply <msg> &7- Alias for /r"
+      - "&e/stats [player] &7- View player stats"
+    '3':
+      - "&e/topstats &7- View leaderboard (GUI)"
+      - "&e/kill &7- Kill yourself"
+
+  # Pages shown to OP players (full help)
+  op:
+    '1':
+      - "&6--- Teleportation & Spawn ---"
+      - "&e/spawn &7- Teleport to spawn"
+      - "&e/setspawn &7- Set the spawn point (OP)"
+      - "&e/tpa <player> &7- Request to teleport to a player"
+      - "&e/tpahere <player> &7- Request a player to teleport to you"
+    '2':
+      - "&e/tpaccept / /tpdeny &7- Accept or deny TPA requests"
+      - "&e/tpcancel &7- Cancel your outgoing TPA request"
+      - "&e/tpaon / /tpaoff &7- Toggle receiving TPA requests"
+      - "&e/s <player> &7- Summon a player to you (OP)"
+      - "&6--- Homes ---"
+    '3':
+      - "&e/home [1-4] &7- Teleport to your home"
+      - "&e/sethome <1-4> &7- Set a home location"
+      - "&e/delhome <1-4> &7- Delete a home location"
+      - "&6--- Messaging & Chat ---"
+      - "&e/msg <player> <msg> &7- Send a private message"
+    '4':
+      - "&e/r <msg> &7- Reply to the last private message"
+      - "&e/chat <on|off|team|...> &7- Change chat settings"
+      - "&e/chatsettings &7- Open chat settings GUI"
+      - "&6--- Team System ---"
+      - "&e/team info &7- Show team information"
+    '5':
+      - "&e/team create <name> &7- Create a new team"
+      - "&e/team invite <player> &7- Invite a player to your team"
+      - "&e/team list &7- List all teams"
+      - "&6--- Utilities & Admin ---"
+      - "&e/stats [player] &7- View player stats"
+    '6':
+      - "&e/topstats &7- View leaderboard (GUI)"
+      - "&e/tpsmore [show] &7- View detailed performance info (OP)"
+      - "&e/v &7- Toggle vanish (OP)"
+      - "&e/bc <msg> &7- Broadcast a message (OP)"
+      - "&e/gmc/gms/gmsp/gma &7- Change gamemode (OP)"
+    '7':
+      - "&e/kill [player] &7- Kill yourself or others (OP)"
+      - "&e/upreload &7- Reload plugin configuration (OP)"
