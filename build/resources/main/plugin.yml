@@ -238,6 +238,9 @@ permissions:
   utilityplus.summon:
     description: Summon other players to your location
     default: op
+  utilityplus.kill:
+    description: Kill yourself (needs confirmation)
+    default: true
   utilityplus.stats:
     description: View kills and deaths
     default: true

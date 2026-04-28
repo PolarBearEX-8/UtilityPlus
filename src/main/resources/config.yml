@@ -5,11 +5,11 @@
 # -----------------------------------------------
 spawn:
   # Teleport player to spawn on their very first join
-  tp-spawn-first-join: true
+  tp-spawn-first-join: false
   # Teleport player to spawn after they click the Respawn button
   tp-spawn-on-death: false
   # Teleport to spawn on respawn ONLY if they have no bed/respawn anchor
-  tp-spawn-no-respawn-point: true
+  tp-spawn-no-respawn-point: false
   # Cooldown (seconds) between /spawn uses. 0 = disabled. OP bypasses.
   tp-spawn-cooldown: 30
   # Warmup (seconds) before teleporting — player must stand still. 0 = instant.
@@ -19,8 +19,8 @@ spawn:
   # If enabled, no-respawn-point teleports will be to a random location
   random-spawn:
     enabled: true
-    min-radius: 0
-    max-radius: 150
+    min-radius: 50
+    max-radius: 1000
     # The world name where random spawn should happen (default to world)
     world: "world"
 
@@ -69,7 +69,7 @@ join-message:
   broadcast: true
   # Message shown to everyone when player joins
   # Default: "{player} joined the game" (vanilla Minecraft style)
-  message: "{player} joined the game"
+  message: "&3{player} joined the game"
 
 leave-message:
   enabled: true
@@ -79,11 +79,11 @@ leave-message:
   broadcast: true
   # Message shown when player leaves
   # Default: "{player} left the game" (vanilla Minecraft style)
-  message: "{player} left the game"
+  message: "&3{player} left the game"
 
 # -----------------------------------------------
 # Broadcast Settings
 # -----------------------------------------------
 broadcast:
   # Prefix shown before broadcast messages
-  prefix: "&6&l[BROADCAST]&r "
+  prefix: "&6&l[Broadcast]&r "

@@ -1,5 +1,6 @@
 package com.example.utilityplus.commands;
 
+import com.example.utilityplus.UtilityPlus;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -13,8 +14,14 @@ import java.util.UUID;
 
 public class KillCommand implements CommandExecutor {
 
+    private final UtilityPlus plugin;
+    
     // Track players who need to confirm their suicide
     private final Set<UUID> pendingConfirmation = new HashSet<>();
+    
+    public KillCommand(UtilityPlus plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -23,26 +30,9 @@ public class KillCommand implements CommandExecutor {
             return true;
         }
 
-        // Case: /kill <player>
-        if (args.length > 0) {
-            if (!sender.hasPermission("utilityplus.kill.others")) {
-                sender.sendMessage("§cYou don't have permission to kill others!");
-                return true;
-            }
-            Player target = Bukkit.getPlayer(args[0]);
-            if (target == null) {
-                sender.sendMessage("§cPlayer not found!");
-                return true;
-            }
-            target.setHealth(0);
-            target.sendMessage("§cYou were killed by " + sender.getName() + ".");
-            sender.sendMessage("§aYou killed " + target.getName() + ".");
-            return true;
-        }
-
         // Case: /kill (Self-kill with confirmation)
         if (!(sender instanceof Player)) {
-            sender.sendMessage("§cConsole must specify a player: /kill <player>");
+            sender.sendMessage("§cOnly players can use this command.");
             return true;
         }
 
@@ -60,8 +50,8 @@ public class KillCommand implements CommandExecutor {
             player.sendMessage("§cAre you sure you want to die? §eType /kill again to confirm.");
             
             // Optional: Remove from pending after 10 seconds
-            Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("UtilityPlus"), 
-                () -> pendingConfirmation.remove(uuid), 200L);
+            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, 
+                (task) -> pendingConfirmation.remove(uuid), 200L);
         }
 
         return true;

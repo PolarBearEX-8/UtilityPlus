@@ -62,23 +62,33 @@ public class StatsManager {
     }
 
     public PlayerStats getStats(UUID uuid) {
-        return statsMap.computeIfAbsent(uuid, k -> new PlayerStats(k, "Unknown", 0, 0));
+        PlayerStats ps = statsMap.get(uuid);
+        if (ps == null) {
+            // Return a temporary zero-stats object (not added to map)
+            return new PlayerStats(uuid, "Unknown", 0, 0);
+        }
+        return ps;
+    }
+
+    public PlayerStats getOrCreateStats(UUID uuid, String name) {
+        return statsMap.computeIfAbsent(uuid, k -> new PlayerStats(k, name != null ? name : "Unknown", 0, 0));
     }
 
     public void addKill(UUID uuid, String name) {
-        PlayerStats ps = getStats(uuid);
+        PlayerStats ps = getOrCreateStats(uuid, name);
         ps.setName(name);
         ps.setKills(ps.getKills() + 1);
     }
 
     public void addDeath(UUID uuid, String name) {
-        PlayerStats ps = getStats(uuid);
+        PlayerStats ps = getOrCreateStats(uuid, name);
         ps.setName(name);
         ps.setDeaths(ps.getDeaths() + 1);
     }
 
     public List<PlayerStats> getTopKills(int limit) {
         return statsMap.values().stream()
+                .filter(ps -> ps.getKills() > 0)
                 .sorted(Comparator.comparingInt(PlayerStats::getKills).reversed())
                 .limit(limit)
                 .collect(Collectors.toList());
@@ -86,6 +96,7 @@ public class StatsManager {
 
     public List<PlayerStats> getTopDeaths(int limit) {
         return statsMap.values().stream()
+                .filter(ps -> ps.getDeaths() > 0)
                 .sorted(Comparator.comparingInt(PlayerStats::getDeaths).reversed())
                 .limit(limit)
                 .collect(Collectors.toList());

@@ -55,7 +55,9 @@ public class ChatListener implements Listener {
                 recipients.remove();
             }
         }
-        // Always keep the sender in recipients so they see their own message
-        event.getRecipients().add(sender);
+        // Keep sender in recipients only if they can see their own message (not global muted)
+        if (!chatManager.isGlobalMuted(sender.getUniqueId())) {
+            event.getRecipients().add(sender);
+        }
     }
 }

@@ -92,7 +92,7 @@ public class UtilityPlus extends JavaPlugin {
         getCommand("gma").setExecutor(gmCmd);
 
         // Kill
-        getCommand("kill").setExecutor(new KillCommand());
+        getCommand("kill").setExecutor(new KillCommand(this));
 
         // Summon
         getCommand("s").setExecutor(new STapwarp());

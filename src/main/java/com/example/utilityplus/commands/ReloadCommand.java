@@ -25,6 +25,7 @@ public class ReloadCommand implements CommandExecutor {
         plugin.getSpawnManager().saveData();
         plugin.getHomeManager().saveData();
         plugin.getTeamManager().saveData();
+        plugin.getStatsManager().saveData();
 
         // 2. Reload config.yml from disk
         plugin.reloadConfig();
@@ -33,9 +34,10 @@ public class ReloadCommand implements CommandExecutor {
         plugin.getSpawnManager().reload();
         plugin.getHomeManager().reload();
         plugin.getTeamManager().reload();
+        plugin.getStatsManager().reload();
 
         sender.sendMessage("§a§lUtilityPlus reloaded!");
-        sender.sendMessage("§7config.yml §a✔  §7spawn §a✔  §7homes §a✔  §7teams §a✔");
+        sender.sendMessage("§7config.yml §a✔  §7spawn §a✔  §7homes §a✔  §7teams §a✔  §7stats §a✔");
         return true;
     }
 }

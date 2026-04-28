@@ -62,10 +62,10 @@ public class SpawnManager {
         this.cooldownSeconds  = cfg.getInt    ("spawn.tp-spawn-cooldown",         30);
         this.warmupSeconds    = cfg.getInt    ("spawn.tp-spawn-warmup",           5);
 
-        this.rtpEnabled   = cfg.getBoolean("spawn.random-spawn.enabled",     true);
-        this.rtpMinRadius = cfg.getInt    ("spawn.random-spawn.min-radius",  500);
-        this.rtpMaxRadius = cfg.getInt    ("spawn.random-spawn.max-radius",  5000);
-        this.rtpWorldName = cfg.getString ("spawn.random-spawn.world",       "world");
+        this.rtpEnabled   = cfg.getBoolean("random-spawn.enabled",     true);
+        this.rtpMinRadius = cfg.getInt    ("random-spawn.min-radius",  50);
+        this.rtpMaxRadius = cfg.getInt    ("random-spawn.max-radius",  1000);
+        this.rtpWorldName = cfg.getString ("random-spawn.world",       "world");
     }
 
     // ---------------------------------------------------------------
@@ -255,15 +255,18 @@ public class SpawnManager {
             world = Bukkit.getWorlds().get(0);
         }
 
-        java.util.Random random = new java.util.Random();
-        int x, z;
+        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
         int attempts = 0;
         Location loc;
 
         while (attempts < 10) {
-            int range = rtpMaxRadius - rtpMinRadius;
-            x = (random.nextInt(range * 2) - range) + (random.nextBoolean() ? rtpMinRadius : -rtpMinRadius);
-            z = (random.nextInt(range * 2) - range) + (random.nextBoolean() ? rtpMinRadius : -rtpMinRadius);
+            // Polar coordinates for uniform distribution in the ring
+            // θ: 0 to 2π, r: rtpMinRadius to rtpMaxRadius
+            double theta = random.nextDouble() * 2 * Math.PI;
+            double r = rtpMinRadius + (rtpMaxRadius - rtpMinRadius) * Math.sqrt(random.nextDouble());
+
+            int x = (int) Math.round(r * Math.cos(theta));
+            int z = (int) Math.round(r * Math.sin(theta));
 
             loc = world.getHighestBlockAt(x, z).getLocation().add(0.5, 1, 0.5);
 
