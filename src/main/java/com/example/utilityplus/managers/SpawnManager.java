@@ -1,0 +1,253 @@
+package com.example.utilityplus.managers;
+
+import com.example.utilityplus.UtilityPlus;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class SpawnManager {
+
+    private final UtilityPlus plugin;
+    private File dataFile;
+    private FileConfiguration dataConfig;
+    private Location spawnLocation;
+
+    // If the world wasn't loaded yet during onEnable, we store its name here
+    // and resolve it lazily on first use or via WorldLoadEvent
+    private String pendingWorldName = null;
+
+    // Config flags
+    private final boolean tpOnFirstJoin;
+    private final boolean tpOnDeath;
+    private final boolean tpNoRespawnPoint;
+    private final int cooldownSeconds;
+    private final int warmupSeconds;
+
+    // Cooldown tracker: UUID -> last /spawn use timestamp (ms)
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
+
+    // Warmup task tracker: UUID -> active warmup task
+    private final Map<UUID, ScheduledTask> warmupTasks = new HashMap<>();
+
+    // Tracks players who have joined before (persisted in spawn.yml)
+    // We store them as a list so first-join detection survives restarts
+    private final java.util.Set<UUID> knownPlayers = new java.util.HashSet<>();
+
+    public SpawnManager(UtilityPlus plugin) {
+        this.plugin = plugin;
+
+        // Read config
+        FileConfiguration cfg = plugin.getConfig();
+        this.tpOnFirstJoin    = cfg.getBoolean("spawn.tp-spawn-first-join",      true);
+        this.tpOnDeath        = cfg.getBoolean("spawn.tp-spawn-on-death",         true);
+        this.tpNoRespawnPoint = cfg.getBoolean("spawn.tp-spawn-no-respawn-point", true);
+        this.cooldownSeconds  = cfg.getInt    ("spawn.tp-spawn-cooldown",         30);
+        this.warmupSeconds    = cfg.getInt    ("spawn.tp-spawn-warmup",           5);
+
+        loadData();
+    }
+
+    // ---------------------------------------------------------------
+    // Data persistence
+    // ---------------------------------------------------------------
+
+    private void loadData() {
+        dataFile = new File(plugin.getDataFolder(), "spawn.yml");
+        if (!dataFile.exists()) {
+            try {
+                plugin.getDataFolder().mkdirs();
+                dataFile.createNewFile();
+            } catch (IOException e) {
+                plugin.getLogger().severe("[SpawnManager] Could not create spawn.yml!");
+            }
+        }
+        dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+
+        // Load spawn location
+        if (dataConfig.contains("spawn.world")) {
+            String worldName = dataConfig.getString("spawn.world");
+            World world = Bukkit.getWorld(worldName);
+            if (world != null) {
+                spawnLocation = buildLocation(world);
+                plugin.getLogger().info("[SpawnManager] Spawn loaded at " + worldName);
+            } else {
+                // World not loaded yet — save name and resolve later
+                pendingWorldName = worldName;
+                plugin.getLogger().warning("[SpawnManager] World '" + worldName
+                        + "' not loaded yet — spawn will be resolved when the world loads.");
+            }
+        }
+
+        // Load known players (for first-join detection)
+        if (dataConfig.contains("known-players")) {
+            for (String uuidStr : dataConfig.getStringList("known-players")) {
+                try { knownPlayers.add(UUID.fromString(uuidStr)); }
+                catch (IllegalArgumentException ignored) {}
+            }
+        }
+    }
+
+    /**
+     * Called by SpawnListener on WorldLoadEvent.
+     * Resolves the spawn location if the world was not ready during onEnable.
+     */
+    public boolean tryResolvePendingWorld(String loadedWorldName) {
+        if (pendingWorldName == null) return false;
+        if (!pendingWorldName.equalsIgnoreCase(loadedWorldName)) return false;
+
+        World world = Bukkit.getWorld(loadedWorldName);
+        if (world == null) return false;
+
+        spawnLocation = buildLocation(world);
+        pendingWorldName = null;
+        plugin.getLogger().info("[SpawnManager] Spawn location resolved after world load: " + loadedWorldName);
+        return true;
+    }
+
+    public boolean hasPendingWorld() {
+        return pendingWorldName != null;
+    }
+
+    private Location buildLocation(World world) {
+        return new Location(
+                world,
+                dataConfig.getDouble("spawn.x"),
+                dataConfig.getDouble("spawn.y"),
+                dataConfig.getDouble("spawn.z"),
+                (float) dataConfig.getDouble("spawn.yaw"),
+                (float) dataConfig.getDouble("spawn.pitch")
+        );
+    }
+
+    public void saveData() {
+        if (spawnLocation != null) {
+            dataConfig.set("spawn.world", spawnLocation.getWorld().getName());
+            dataConfig.set("spawn.x",     spawnLocation.getX());
+            dataConfig.set("spawn.y",     spawnLocation.getY());
+            dataConfig.set("spawn.z",     spawnLocation.getZ());
+            dataConfig.set("spawn.yaw",   (double) spawnLocation.getYaw());
+            dataConfig.set("spawn.pitch", (double) spawnLocation.getPitch());
+        }
+
+        // Persist known-players list
+        java.util.List<String> uuidList = new java.util.ArrayList<>();
+        for (UUID uuid : knownPlayers) uuidList.add(uuid.toString());
+        dataConfig.set("known-players", uuidList);
+
+        try {
+            dataConfig.save(dataFile);
+        } catch (IOException e) {
+            plugin.getLogger().severe("[SpawnManager] Could not save spawn.yml!");
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Spawn location
+    // ---------------------------------------------------------------
+
+    public void setSpawn(Location location) {
+        this.spawnLocation = location;
+        saveData();
+    }
+
+    public Location getSpawn() {
+        return spawnLocation;
+    }
+
+    public boolean hasSpawn() {
+        return spawnLocation != null;
+    }
+
+    // ---------------------------------------------------------------
+    // Cooldown
+    // ---------------------------------------------------------------
+
+    public boolean isOnCooldown(UUID uuid) {
+        return getCooldownSecondsLeft(uuid) > 0;
+    }
+
+    public long getCooldownSecondsLeft(UUID uuid) {
+        Long last = cooldowns.get(uuid);
+        if (last == null || cooldownSeconds <= 0) return 0;
+        long elapsed = (System.currentTimeMillis() - last) / 1000L;
+        return Math.max(0L, cooldownSeconds - elapsed);
+    }
+
+    public void applyCooldown(UUID uuid) {
+        if (cooldownSeconds > 0) {
+            cooldowns.put(uuid, System.currentTimeMillis());
+        }
+    }
+
+    public int getCooldownSeconds() {
+        return cooldownSeconds;
+    }
+
+    public int getWarmupSeconds() {
+        return warmupSeconds;
+    }
+
+    // ---------------------------------------------------------------
+    // Warmup task management
+    // ---------------------------------------------------------------
+
+    public void startWarmup(UUID uuid, ScheduledTask task) {
+        cancelWarmup(uuid);
+        warmupTasks.put(uuid, task);
+    }
+
+    public void cancelWarmup(UUID uuid) {
+        ScheduledTask t = warmupTasks.remove(uuid);
+        if (t != null) t.cancel();
+    }
+
+    public boolean hasWarmup(UUID uuid) {
+        return warmupTasks.containsKey(uuid);
+    }
+
+    public UtilityPlus getPlugin() {
+        return plugin;
+    }
+
+    /** Called by ReloadCommand — re-reads spawn.yml and config values. */
+    public void reload() {
+        spawnLocation   = null;
+        pendingWorldName = null;
+        knownPlayers.clear();
+        loadData();
+        plugin.getLogger().info("[SpawnManager] Reloaded.");
+    }
+
+    // ---------------------------------------------------------------
+    // Config flag getters
+    // ---------------------------------------------------------------
+
+    public boolean isTpOnFirstJoin()    { return tpOnFirstJoin; }
+    public boolean isTpOnDeath()        { return tpOnDeath; }
+    public boolean isTpNoRespawnPoint() { return tpNoRespawnPoint; }
+
+    // ---------------------------------------------------------------
+    // First-join tracking
+    // ---------------------------------------------------------------
+
+    /** Returns true if this is the player's first time joining the server. */
+    public boolean isFirstJoin(UUID uuid) {
+        return !knownPlayers.contains(uuid);
+    }
+
+    /** Mark a player as having joined before. */
+    public void markKnown(UUID uuid) {
+        if (knownPlayers.add(uuid)) {
+            saveData(); // persist immediately so restarts don't re-trigger
+        }
+    }
+}

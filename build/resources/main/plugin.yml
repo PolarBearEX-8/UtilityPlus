@@ -1,0 +1,201 @@
+name: UtilityPlus
+version: 1.0.0
+main: com.example.utilityplus.UtilityPlus
+api-version: 1.20
+folia-supported: true
+description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+author: CADS
+
+commands:
+  # --- Spawn ---
+  setspawn:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /setspawn
+    permission: utilityplus.setspawn
+  spawn:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /spawn
+    permission: utilityplus.spawn
+
+  # --- Home ---
+  sethome:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /sethome <1|2|3|4>
+    permission: utilityplus.sethome
+  home:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /home [1|2|3|4]
+    permission: utilityplus.home
+  delhome:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /delhome <1|2|3|4>
+    permission: utilityplus.delhome
+
+  # --- TPA ---
+  tpa:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /tpa <player>
+    permission: utilityplus.tpa
+  tpahere:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /tpahere <player>
+    permission: utilityplus.tpa
+  tpaccept:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /tpaccept
+    permission: utilityplus.tpa
+  tpdeny:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /tpdeny
+    permission: utilityplus.tpa
+  tpcancel:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /tpcancel
+    permission: utilityplus.tpa
+  tpaon:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /tpaon
+    permission: utilityplus.tpa
+  tpaoff:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /tpaoff
+    permission: utilityplus.tpa
+
+  # --- Chat ---
+  chat:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /chat <on|off|teamon|teamoff|pmon|pmoff|team>
+    permission: utilityplus.chat
+  chatsettings:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /chatsettings
+    permission: utilityplus.chat
+
+  # --- PM ---
+  msg:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /msg <player> <message>
+    permission: utilityplus.pm
+  tell:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /tell <player> <message>
+    permission: utilityplus.pm
+  w:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /w <player> <message>
+    permission: utilityplus.pm
+  whisper:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /whisper <player> <message>
+    permission: utilityplus.pm
+  dm:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /dm <player> <message>
+    permission: utilityplus.pm
+  pm:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /pm <player> <message>
+    permission: utilityplus.pm
+  r:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /r <message>
+    permission: utilityplus.pm
+  reply:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    usage: /reply <message>
+    permission: utilityplus.pm
+
+  # --- Team ---
+  team:
+    description: UtilityPlus — Team system
+    usage: /team <create|invite|accept|deny|leave|disband|kick|promote|demote|list|chat|info>
+    permission: utilityplus.team
+
+  upreload:
+    description: Reload UtilityPlus config and data
+    usage: /upreload
+    permission: utilityplus.reload
+
+  # --- Vanish ---
+  v:
+    description: Toggle vanish mode (invisibility)
+    usage: /v
+    permission: utilityplus.vanish
+
+  # --- Broadcast ---
+  bc:
+    description: Broadcast a message to all players
+    usage: /bc <message>
+    permission: utilityplus.broadcast
+  broadcast:
+    description: Broadcast a message to all players
+    usage: /broadcast <message>
+    permission: utilityplus.broadcast
+
+  # --- Gamemode ---
+  gmc:
+    description: Set gamemode to Creative
+    usage: /gmc [player]
+    permission: utilityplus.gamemode
+  gms:
+    description: Set gamemode to Survival
+    usage: /gms [player]
+    permission: utilityplus.gamemode
+  gmsp:
+    description: Set gamemode to Spectator
+    usage: /gmsp [player]
+    permission: utilityplus.gamemode
+  gma:
+    description: Set gamemode to Adventure
+    usage: /gma [player]
+    permission: utilityplus.gamemode
+
+permissions:
+  utilityplus.setspawn:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: op
+  utilityplus.spawn:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.sethome:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.home:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.delhome:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.tpa:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.chat:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.pm:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.team:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.anvil.color:
+    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    default: true
+  utilityplus.reload:
+    description: Reload UtilityPlus config and data
+    default: op
+  utilityplus.vanish:
+    description: Toggle vanish mode
+    default: op
+  utilityplus.vanish.see:
+    description: See vanished players
+    default: op
+  utilityplus.broadcast:
+    description: Broadcast messages
+    default: op
+  utilityplus.gamemode:
+    description: Change own gamemode
+    default: op
+  utilityplus.gamemode.others:
+    description: Change other players' gamemode
+    default: op

@@ -1,0 +1,80 @@
+# UtilityPlus Configuration
+
+# -----------------------------------------------
+# Spawn Settings
+# -----------------------------------------------
+spawn:
+  # Teleport player to spawn on their very first join
+  tp-spawn-first-join: true
+  # Teleport player to spawn after they click the Respawn button
+  tp-spawn-on-death: false
+  # Teleport to spawn on respawn ONLY if they have no bed/respawn anchor
+  tp-spawn-no-respawn-point: true
+  # Cooldown (seconds) between /spawn uses. 0 = disabled. OP bypasses.
+  tp-spawn-cooldown: 30
+  # Warmup (seconds) before teleporting — player must stand still. 0 = instant.
+  tp-spawn-warmup: 5
+
+# -----------------------------------------------
+# TPA Settings
+# -----------------------------------------------
+tpa:
+  # How long (seconds) a TPA request stays active before expiring
+  timeout: 60
+  # How long (seconds) to wait before teleporting after /tpaccept
+  # Player must not move during this time or the teleport is cancelled
+  warmup: 3
+
+# -----------------------------------------------
+# Home Settings
+# -----------------------------------------------
+home:
+  # Warmup (seconds) before teleporting — player must stand still. 0 = instant.
+  warmup: 3
+  # Maximum number of home slots per player (1–4).
+  max-homes: 4
+
+# -----------------------------------------------
+# Team Settings
+# -----------------------------------------------
+team:
+  # Maximum number of players per team
+  max-members: 10
+  # How long (seconds) an invite stays valid before expiring
+  invite-timeout: 60
+  # Auto-kick members offline for longer than this many minutes (0 = disabled, owner is never kicked)
+  offline-kick-minutes: 5
+
+# -----------------------------------------------
+# Custom Join/Leave Message Settings
+# -----------------------------------------------
+# Placeholders: {player} = player name, {displayname} = display name,
+# {world} = world name, {online} = online players count, {max} = max players
+# Use & for color codes (e.g., &a = green, &c = red, &l = bold, &e = yellow)
+
+join-message:
+  enabled: true
+  # Hide the default Minecraft join message
+  hide-vanilla: true
+  # Broadcast to all players
+  broadcast: true
+  # Message shown to everyone when player joins
+  # Default: "{player} joined the game" (vanilla Minecraft style)
+  message: "{player} joined the game"
+
+leave-message:
+  enabled: true
+  # Hide the default Minecraft leave message
+  hide-vanilla: true
+  # Broadcast to all players
+  broadcast: true
+  # Message shown when player leaves
+  # Default: "{player} left the game" (vanilla Minecraft style)
+  message: "{player} left the game"
+
+# -----------------------------------------------
+# Broadcast Settings
+# -----------------------------------------------
+broadcast:
+  # Prefix shown before broadcast messages
+  prefix: "&6&l[BROADCAST]&r "
