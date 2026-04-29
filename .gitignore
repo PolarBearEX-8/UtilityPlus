@@ -1,0 +1,10 @@
+.gradle/
+build/
+bin/
+run/
+run-folia/
+.idea/
+.vscode/
+*.iml
+*.log
+*.log.gz
