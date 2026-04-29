@@ -45,6 +45,24 @@ shadowJar {
     archiveFileName.set("${project.name}-${project.version}.jar")
 }
 
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+tasks.register("paperJar", ShadowJar) {
+    group = "build"
+    archiveBaseName.set("${project.name}-Paper")
+    archiveClassifier.set('')
+    from sourceSets.main.output
+    configurations = [project.configurations.runtimeClasspath]
+}
+
+tasks.register("foliaJar", ShadowJar) {
+    group = "build"
+    archiveBaseName.set("${project.name}-Folia")
+    archiveClassifier.set('')
+    from sourceSets.main.output
+    configurations = [project.configurations.runtimeClasspath]
+}
+
 def mcVersion = providers.gradleProperty("minecraftVersion").orElse("1.21.11").get()
 def paperRunDir = file("run-paper")
 def foliaRunDir = file("run-folia")
@@ -115,4 +133,4 @@ runPaper {
     }
 }
 
-build.dependsOn shadowJar
+build.dependsOn paperJar, foliaJar
