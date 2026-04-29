@@ -1,10 +1,13 @@
 package com.example.utilityplus.commands;
 
+import com.example.utilityplus.UtilityPlus;
 import com.example.utilityplus.managers.ChatManager;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
 
@@ -91,9 +94,10 @@ public class PMCommand implements CommandExecutor {
         // Vanilla-style format
         String toSender  = "§7[§fYou §8-> §f" + to.getName()   + "§7] §f" + message;
         String toTarget  = "§7[§f" + from.getName() + " §8-> §fYou§7] §f" + message;
+        UtilityPlus plugin = JavaPlugin.getPlugin(UtilityPlus.class);
 
         from.sendMessage(toSender);
-        to.sendMessage(toTarget);
+        PaperFoliaTasks.send(plugin, to, toTarget);
 
         // Track last sender for /reply
         chatManager.setLastPmSender(to.getUniqueId(),   from.getUniqueId());

@@ -3,11 +3,12 @@ package com.example.utilityplus;
 import com.example.utilityplus.commands.*;
 import com.example.utilityplus.listeners.*;
 import com.example.utilityplus.managers.*;
-import com.example.utilityplus.listeners.JoinMessageListener;
 import com.example.utilityplus.tabcomplete.TabCompleterManager;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class UtilityPlus extends JavaPlugin {
@@ -39,80 +40,62 @@ public class UtilityPlus extends JavaPlugin {
         // ── Executors ─────────────────────────────────────────────────
         // Spawn
         SpawnCommand spawnCmd = new SpawnCommand(spawnManager);
-        getCommand("setspawn").setExecutor(spawnCmd);
-        getCommand("spawn").setExecutor(spawnCmd);
+        registerCommands(spawnCmd, "setspawn", "spawn");
 
         // Home
         HomeCommand homeCmd = new HomeCommand(homeManager);
-        getCommand("sethome").setExecutor(homeCmd);
-        getCommand("home").setExecutor(homeCmd);
-        getCommand("delhome").setExecutor(homeCmd);
+        registerCommands(homeCmd, "sethome", "home", "delhome");
 
         // TPA
         TPACommand tpaCmd = new TPACommand(tpaManager, this);
-        getCommand("tpa").setExecutor(tpaCmd);
-        getCommand("tpahere").setExecutor(tpaCmd);
-        getCommand("tpaccept").setExecutor(tpaCmd);
-        getCommand("tpdeny").setExecutor(tpaCmd);
-        getCommand("tpcancel").setExecutor(tpaCmd);
-        getCommand("tpaon").setExecutor(tpaCmd);
-        getCommand("tpaoff").setExecutor(tpaCmd);
+        registerCommands(tpaCmd, "tpa", "tpahere", "tpaccept", "tpdeny", "tpcancel", "tpaon", "tpaoff");
 
         // Chat
         ChatCommand chatCmd = new ChatCommand(chatManager);
-        getCommand("chat").setExecutor(chatCmd);
-        getCommand("chatsettings").setExecutor(chatCmd);
+        registerCommands(chatCmd, "chat", "chatsettings");
 
         // PM
         PMCommand pmCmd = new PMCommand(chatManager);
-        for (String c : Arrays.asList("msg","tell","w","whisper","dm","pm","r","reply")) {
-            getCommand(c).setExecutor(pmCmd);
-        }
+        registerCommands(pmCmd, "msg", "tell", "w", "whisper", "dm", "pm", "r", "reply");
 
         // Team
-        getCommand("team").setExecutor(new TeamCommand(teamManager, chatManager));
+        registerCommand("team", new TeamCommand(teamManager, chatManager));
 
         // Reload
-        getCommand("upreload").setExecutor(new ReloadCommand(this));
+        registerCommand("upreload", new ReloadCommand(this));
 
         // Vanish
         vanishCommand = new VanishCommand(this);
-        getCommand("v").setExecutor(vanishCommand);
+        registerCommand("v", vanishCommand);
 
         // Broadcast
         BroadcastCommand bcCmd = new BroadcastCommand(this);
-        getCommand("bc").setExecutor(bcCmd);
-        getCommand("broadcast").setExecutor(bcCmd);
+        registerCommands(bcCmd, "bc", "broadcast");
 
         // Gamemode
         GamemodeCommand gmCmd = new GamemodeCommand();
-        getCommand("gmc").setExecutor(gmCmd);
-        getCommand("gms").setExecutor(gmCmd);
-        getCommand("gmsp").setExecutor(gmCmd);
-        getCommand("gma").setExecutor(gmCmd);
+        registerCommands(gmCmd, "gmc", "gms", "gmsp", "gma");
 
         // Kill
-        getCommand("kill").setExecutor(new KillCommand(this));
+        registerCommand("kill", new KillCommand(this));
 
         // Summon
-        getCommand("s").setExecutor(new STapwarp());
+        registerCommand("s", new STapwarp());
 
         // Help
-        getCommand("helps").setExecutor(new HelpsCommand(this));
+        registerCommand("helps", new HelpsCommand(this));
 
         // Stats
         StatsCommand statsCmd = new StatsCommand(statsManager);
-        getCommand("stats").setExecutor(statsCmd);
-        getCommand("topstats").setExecutor(statsCmd);
+        registerCommands(statsCmd, "stats", "topstats");
 
         // TPS More
         TPSMoreCommand tpsMoreCmd = new TPSMoreCommand(tickMonitor, cpuMonitor);
-        getCommand("tpsmore").setExecutor(tpsMoreCmd);
-        getCommand("tps").setExecutor(tpsMoreCmd);
+        registerCommands(tpsMoreCmd, "tpsmore", "tps");
 
         // ── Tab Completers ────────────────────────────────────────────
         TabCompleterManager tab = new TabCompleterManager(homeManager, teamManager);
-        List<String> allCmds = Arrays.asList(
+        List<String> allCmds = List.of(
             "setspawn","spawn",
             "sethome","home","delhome",
             "tpa","tpahere","tpaccept","tpdeny","tpcancel","tpaon","tpaoff",
@@ -122,7 +105,7 @@ public class UtilityPlus extends JavaPlugin {
             "v","bc","broadcast","gmc","gms","gmsp","gma","kill","s","helps",
             "stats", "topstats", "tpsmore", "tps"
         );
-        for (String c : allCmds) getCommand(c).setTabCompleter(tab);
+        registerTabCompleters(tab, allCmds);
 
         // ── Listeners ─────────────────────────────────────────────────
         getServer().getPluginManager().registerEvents(new SpawnListener(spawnManager), this);
@@ -145,6 +128,7 @@ public class UtilityPlus extends JavaPlugin {
         if (homeManager  != null) homeManager.saveData();
         if (teamManager  != null) teamManager.saveData();
         if (statsManager != null) statsManager.saveData();
+        if (vanishCommand != null) vanishCommand.saveData();
         getLogger().info("UtilityPlus disabled!");
     }
 
@@ -154,4 +138,28 @@ public class UtilityPlus extends JavaPlugin {
     public ChatManager  getChatManager()  { return chatManager; }
     public TeamManager  getTeamManager()  { return teamManager; }
     public StatsManager getStatsManager() { return statsManager; }
+
+    private void registerCommands(CommandExecutor executor, String... names) {
+        for (String name : names) {
+            registerCommand(name, executor);
+        }
+    }
+
+    private void registerCommand(String name, CommandExecutor executor) {
+        command(name).setExecutor(executor);
+    }
+
+    private void registerTabCompleters(TabCompleter completer, List<String> names) {
+        for (String name : names) {
+            command(name).setTabCompleter(completer);
+        }
+    }
+
+    private PluginCommand command(String name) {
+        PluginCommand command = getCommand(name);
+        if (command == null) {
+            throw new IllegalStateException("Command '/" + name + "' is missing from plugin.yml");
+        }
+        return command;
+    }
 }

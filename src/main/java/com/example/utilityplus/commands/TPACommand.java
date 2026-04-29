@@ -3,6 +3,7 @@ package com.example.utilityplus.commands;
 import com.example.utilityplus.managers.TPAManager;
 import com.example.utilityplus.managers.TPAManager.RequestType;
 import com.example.utilityplus.managers.TPAManager.TPARequest;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -216,12 +217,17 @@ public class TPACommand implements CommandExecutor {
         int warmup = tpaManager.getWarmupSeconds();
         Location startLoc = traveller.getLocation().clone();
 
+        if (warmup <= 0) {
+            teleportToPlayer(traveller, destination);
+            return;
+        }
+
         traveller.sendMessage("§eTeleporting in §a" + warmup + "§e second(s)... §7Don't move!");
 
         AtomicInteger countdown = new AtomicInteger(warmup);
 
         // Use Folia EntityScheduler for player-specific tasks
-        ScheduledTask task = traveller.getScheduler().runAtFixedRate(plugin, (t) -> {
+        ScheduledTask task = PaperFoliaTasks.runForPlayerTimer(plugin, traveller, (t) -> {
             if (hasMoved(startLoc, traveller.getLocation())) {
                 traveller.sendMessage("§cTeleport cancelled — you moved!");
                 traveller.playSound(traveller.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 0.5f);
@@ -236,23 +242,45 @@ public class TPACommand implements CommandExecutor {
                 tpaManager.cancelWarmup(traveller.getUniqueId());
                 t.cancel();
 
-                if (!destination.isOnline()) {
-                    traveller.sendMessage("§cTeleport failed — destination player is no longer online.");
-                    return;
-                }
-                traveller.teleport(destination.getLocation());
-                traveller.sendMessage("§aTeleported to §e" + destination.getName() + "§a!");
-                traveller.playSound(traveller.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
-                destination.sendMessage("§e" + traveller.getName() + " §aarrived at your location.");
+                teleportToPlayer(traveller, destination);
                 return;
             }
 
             // ติ้ง ทุกวินาที
             traveller.sendMessage("§eTeleporting in §a" + remaining + "§e...");
             traveller.playSound(traveller.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
-        }, null, 1L, 20L);
+        }, 1L, 20L);
 
         tpaManager.startWarmup(traveller.getUniqueId(), task);
+    }
+
+    private void teleportToPlayer(Player traveller, Player destination) {
+        boolean scheduled = PaperFoliaTasks.runForPlayer(plugin, destination, () -> {
+            if (!destination.isOnline()) {
+                PaperFoliaTasks.runForSender(plugin, traveller, () ->
+                        traveller.sendMessage("§cTeleport failed — destination player is no longer online."));
+                return;
+            }
+
+            Location destinationLocation = destination.getLocation().clone();
+            String destinationName = destination.getName();
+            String travellerName = traveller.getName();
+
+            PaperFoliaTasks.teleport(traveller, destinationLocation, plugin, success -> {
+                if (!success) {
+                    traveller.sendMessage("§cTeleport failed.");
+                    return;
+                }
+                traveller.sendMessage("§aTeleported to §e" + destinationName + "§a!");
+                traveller.playSound(traveller.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+                PaperFoliaTasks.runForSender(plugin, destination, () ->
+                        destination.sendMessage("§e" + travellerName + " §aarrived at your location."));
+            });
+        });
+
+        if (!scheduled) {
+            traveller.sendMessage("§cTeleport failed — destination player is no longer online.");
+        }
     }
 
     private boolean hasMoved(Location from, Location to) {

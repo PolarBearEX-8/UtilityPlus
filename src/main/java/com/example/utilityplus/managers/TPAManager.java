@@ -1,11 +1,12 @@
 package com.example.utilityplus.managers;
 
 import com.example.utilityplus.UtilityPlus;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages TPA requests and warmup timers.
@@ -45,13 +46,13 @@ public class TPAManager {
     // ── State ─────────────────────────────────────────────────────────
     // target UUID → most-recent request from each sender
     // Map<targetUUID, Map<requesterUUID, TPARequest>>
-    private final Map<UUID, Map<UUID, TPARequest>> pendingRequests = new HashMap<>();
+    private final Map<UUID, Map<UUID, TPARequest>> pendingRequests = new ConcurrentHashMap<>();
 
     // Players who have disabled TPA
-    private final Set<UUID> tpaDisabled = new HashSet<>();
+    private final Set<UUID> tpaDisabled = ConcurrentHashMap.newKeySet();
 
     // Warmup task per teleporting player UUID
-    private final Map<UUID, ScheduledTask> warmupTasks = new HashMap<>();
+    private final Map<UUID, ScheduledTask> warmupTasks = new ConcurrentHashMap<>();
 
     // Config
     private final UtilityPlus plugin;
@@ -80,11 +81,11 @@ public class TPAManager {
     public void sendRequest(Player requester, Player target, RequestType type) {
         TPARequest req = new TPARequest(requester, target, type);
         pendingRequests
-                .computeIfAbsent(target.getUniqueId(), k -> new HashMap<>())
+                .computeIfAbsent(target.getUniqueId(), k -> new ConcurrentHashMap<>())
                 .put(requester.getUniqueId(), req);
 
         // Auto-expire after timeout using Folia GlobalRegionScheduler
-        Bukkit.getGlobalRegionScheduler().runDelayed(plugin, (task) -> {
+        PaperFoliaTasks.runGlobalDelayed(plugin, (task) -> {
             removeRequest(target.getUniqueId(), requester.getUniqueId());
         }, timeoutSeconds * 20L);
     }

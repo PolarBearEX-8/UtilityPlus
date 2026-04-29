@@ -1,5 +1,6 @@
 package com.example.utilityplus.commands;
 
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -29,7 +30,7 @@ public class BroadcastCommand implements CommandExecutor {
         String message = String.join(" ", args);
 
         String broadcastMessage = (prefix + message).replace("&", "§");
-        plugin.getServer().broadcastMessage(broadcastMessage);
+        PaperFoliaTasks.broadcast(plugin, broadcastMessage);
 
         return true;
     }

@@ -2,6 +2,7 @@ package com.example.utilityplus.listeners;
 
 import com.example.utilityplus.UtilityPlus;
 import com.example.utilityplus.commands.VanishCommand;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,17 +21,21 @@ public class VanishListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player joiningPlayer = event.getPlayer();
+        refreshVanishFor(joiningPlayer, true);
 
-        // 1. Hide already vanished players from the joining player
-        for (Player online : plugin.getServer().getOnlinePlayers()) {
-            if (vanishCommand.isVanished(online.getUniqueId())) {
-                if (!joiningPlayer.hasPermission("utilityplus.vanish.see")) {
-                    joiningPlayer.hidePlayer(plugin, online);
-                }
+        // Re-send hide packets after the join spawn packets have settled.
+        PaperFoliaTasks.runForPlayerDelayed(plugin, joiningPlayer, task -> refreshVanishFor(joiningPlayer, false), 2L);
+        PaperFoliaTasks.runForPlayerDelayed(plugin, joiningPlayer, task -> refreshVanishFor(joiningPlayer, false), 20L);
+    }
+
+    private void refreshVanishFor(Player joiningPlayer, boolean notify) {
+        vanishCommand.hideVanishedPlayersFrom(joiningPlayer);
+
+        if (vanishCommand.isVanished(joiningPlayer.getUniqueId())) {
+            vanishCommand.applyPersistentVanish(joiningPlayer);
+            if (notify) {
+                joiningPlayer.sendMessage("§7You are still vanished.");
             }
         }
-        
-        // 2. If the joining player themselves should be vanished (if we add persistence later), 
-        // handle it here. For now, vanish is not persistent.
     }
 }

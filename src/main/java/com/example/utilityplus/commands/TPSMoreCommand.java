@@ -3,6 +3,7 @@ package com.example.utilityplus.commands;
 import com.example.utilityplus.UtilityPlus;
 import com.example.utilityplus.managers.CpuMonitor;
 import com.example.utilityplus.managers.TickMonitor;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -48,21 +49,23 @@ public class TPSMoreCommand implements CommandExecutor {
             return true;
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            sender.sendMessage("§8§l--- §b§lTPS More Info §8§l---");
+        PaperFoliaTasks.runGlobal(plugin, () -> {
+            Consumer<String> out = message -> PaperFoliaTasks.runForSender(plugin, sender, () -> sender.sendMessage(message));
+
+            out.accept("§8§l--- §b§lTPS More Info §8§l---");
 
             if (!isFolia) {
                 double[] tps = Bukkit.getTPS();
-                sender.sendMessage("§7Server Implementation: §eLeaf Async");
-                sender.sendMessage("§7Global TPS (1m, 5m, 15m): " + formatTPS(tps[0]) + "§7, " + formatTPS(tps[1]) + "§7, " + formatTPS(tps[2]));
+                out.accept("§7Server Implementation: §eLeaf Async");
+                out.accept("§7Global TPS (1m, 5m, 15m): " + formatTPS(tps[0]) + "§7, " + formatTPS(tps[1]) + "§7, " + formatTPS(tps[2]));
             } else {
-                sender.sendMessage("§7Server Implementation: §eFolia (Regionalized)");
+                out.accept("§7Server Implementation: §eFolia (Regionalized)");
             }
 
             // Per World Breakdown
-            sender.sendMessage("§6Worlds Info:");
+            out.accept("§6Worlds Info:");
             for (World world : Bukkit.getWorlds()) {
-                sender.sendMessage(" §b§n" + world.getName());
+                out.accept(" §b§n" + world.getName());
                 
                 if (isFolia) {
                     List<Double> worldTPS = getRegionTPSForWorld(world);
@@ -71,10 +74,10 @@ public class TPSMoreCommand implements CommandExecutor {
                         double lowest = worldTPS.get(0);
                         double median = worldTPS.get(worldTPS.size() / 2);
                         double highest = worldTPS.get(worldTPS.size() - 1);
-                        sender.sendMessage("  §7Regional TPS: " + formatTPS(lowest) + " §7/ " + formatTPS(median) + " §7/ " + formatTPS(highest));
-                        sender.sendMessage("  §7Active Regions: §e" + worldTPS.size());
+                        out.accept("  §7Regional TPS: " + formatTPS(lowest) + " §7/ " + formatTPS(median) + " §7/ " + formatTPS(highest));
+                        out.accept("  §7Active Regions: §e" + worldTPS.size());
                     } else {
-                        sender.sendMessage("  §7Regional TPS: §cNo active regions");
+                        out.accept("  §7Regional TPS: §cNo active regions");
                     }
                 }
 
@@ -82,33 +85,33 @@ public class TPSMoreCommand implements CommandExecutor {
                 int worldChunks = world.getLoadedChunks().length;
                 int worldPlayers = world.getPlayers().size();
                 
-                sender.sendMessage("  §7Entities: §e" + worldEntities + " §7| Chunks: §e" + worldChunks + " §7| Players: §e" + worldPlayers);
+                out.accept("  §7Entities: §e" + worldEntities + " §7| Chunks: §e" + worldChunks + " §7| Players: §e" + worldPlayers);
             }
 
             // Tick Durations (Spark Style)
             TickMonitor.Stats stats10s = tickMonitor.getStats(200);
             TickMonitor.Stats stats1m = tickMonitor.getStats(1200);
 
-            sender.sendMessage("§6Tick Durations (min/med/95%ile/max ms)");
-            sender.sendMessage(" §7last 10s: " + formatStatsSpark(stats10s));
-            sender.sendMessage(" §7last 1m:  " + formatStatsSpark(stats1m));
+            out.accept("§6Tick Durations (min/med/95%ile/max ms)");
+            out.accept(" §7last 10s: " + formatStatsSpark(stats10s));
+            out.accept(" §7last 1m:  " + formatStatsSpark(stats1m));
 
             // System Metrics
-            sender.sendMessage("§6System Info:");
+            out.accept("§6System Info:");
             
             CpuMonitor.CpuStats cpu10s = cpuMonitor.getStats(10);
             CpuMonitor.CpuStats cpu1m = cpuMonitor.getStats(60);
             CpuMonitor.CpuStats cpu15m = cpuMonitor.getStats(900);
 
-            sender.sendMessage(" §7CPU Usage (10s, 1m, 15m):");
-            sender.sendMessage("  §7System:  §e" + formatCpu(cpu10s.system()) + "%§7, §e" + formatCpu(cpu1m.system()) + "%§7, §e" + formatCpu(cpu15m.system()) + "%");
-            sender.sendMessage("  §7Process: §e" + formatCpu(cpu10s.process()) + "%§7, §e" + formatCpu(cpu1m.process()) + "%§7, §e" + formatCpu(cpu15m.process()) + "%");
+            out.accept(" §7CPU Usage (10s, 1m, 15m):");
+            out.accept("  §7System:  §e" + formatCpu(cpu10s.system()) + "%§7, §e" + formatCpu(cpu1m.system()) + "%§7, §e" + formatCpu(cpu15m.system()) + "%");
+            out.accept("  §7Process: §e" + formatCpu(cpu10s.process()) + "%§7, §e" + formatCpu(cpu1m.process()) + "%§7, §e" + formatCpu(cpu15m.process()) + "%");
 
-            sender.sendMessage(" §7Disk Usage: " + getDiskUsage());
+            out.accept(" §7Disk Usage: " + getDiskUsage());
 
             MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
             MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
-            sender.sendMessage(" §7Memory: §e" + (heapUsage.getUsed() / 1024 / 1024) + " MB / " + (heapUsage.getMax() / 1024 / 1024) + " MB");
+            out.accept(" §7Memory: §e" + (heapUsage.getUsed() / 1024 / 1024) + " MB / " + (heapUsage.getMax() / 1024 / 1024) + " MB");
 
             // Summary
             int totalEntities = 0;
@@ -117,11 +120,11 @@ public class TPSMoreCommand implements CommandExecutor {
                 totalEntities += world.getEntityCount();
                 totalChunks += world.getLoadedChunks().length;
             }
-            sender.sendMessage("§6Summary:");
-            sender.sendMessage(" §7Total Players: §e" + Bukkit.getOnlinePlayers().size() + "§7 / §e" + Bukkit.getMaxPlayers());
-            sender.sendMessage(" §7Total Resources: §e" + totalEntities + " §7Entities | §e" + totalChunks + " §7Chunks");
+            out.accept("§6Summary:");
+            out.accept(" §7Total Players: §e" + Bukkit.getOnlinePlayers().size() + "§7 / §e" + Bukkit.getMaxPlayers());
+            out.accept(" §7Total Resources: §e" + totalEntities + " §7Entities | §e" + totalChunks + " §7Chunks");
 
-            sender.sendMessage("§8§l-------------------------");
+            out.accept("§8§l-------------------------");
         });
 
         return true;

@@ -1,9 +1,12 @@
 package com.example.utilityplus.commands;
 
+import com.example.utilityplus.UtilityPlus;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class STapwarp implements CommandExecutor {
 
@@ -35,9 +38,19 @@ public class STapwarp implements CommandExecutor {
             return true;
         }
 
-        target.teleport(player.getLocation());
-        target.sendMessage("§aYou have been summoned by §e" + player.getName() + "§a!");
-        player.sendMessage("§aYou have summoned §e" + target.getName() + " §ato your location!");
+        UtilityPlus plugin = JavaPlugin.getPlugin(UtilityPlus.class);
+        String targetName = target.getName();
+        String playerName = player.getName();
+
+        PaperFoliaTasks.teleport(target, player.getLocation(), plugin, success -> {
+            if (!success) {
+                PaperFoliaTasks.runForSender(plugin, player, () -> player.sendMessage("§cSummon failed."));
+                return;
+            }
+            target.sendMessage("§aYou have been summoned by §e" + playerName + "§a!");
+            PaperFoliaTasks.runForSender(plugin, player, () ->
+                    player.sendMessage("§aYou have summoned §e" + targetName + " §ato your location!"));
+        });
 
         return true;
     }

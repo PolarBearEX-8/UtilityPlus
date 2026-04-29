@@ -1,23 +1,23 @@
 package com.example.utilityplus.commands;
 
 import com.example.utilityplus.UtilityPlus;
-import org.bukkit.Bukkit;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class KillCommand implements CommandExecutor {
 
     private final UtilityPlus plugin;
     
     // Track players who need to confirm their suicide
-    private final Set<UUID> pendingConfirmation = new HashSet<>();
+    private final Set<UUID> pendingConfirmation = ConcurrentHashMap.newKeySet();
     
     public KillCommand(UtilityPlus plugin) {
         this.plugin = plugin;
@@ -50,8 +50,7 @@ public class KillCommand implements CommandExecutor {
             player.sendMessage("§cAre you sure you want to die? §eType /kill again to confirm.");
             
             // Optional: Remove from pending after 10 seconds
-            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, 
-                (task) -> pendingConfirmation.remove(uuid), 200L);
+            PaperFoliaTasks.runForPlayerDelayed(plugin, player, task -> pendingConfirmation.remove(uuid), 200L);
         }
 
         return true;

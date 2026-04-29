@@ -1,23 +1,33 @@
 package com.example.utilityplus.commands;
 
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashSet;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class VanishCommand implements CommandExecutor {
 
     private final JavaPlugin plugin;
-    private final Set<UUID> vanishedPlayers = new HashSet<>();
+    private final Set<UUID> vanishedPlayers = ConcurrentHashMap.newKeySet();
+    private final File dataFile;
+    private FileConfiguration dataConfig;
 
     public VanishCommand(JavaPlugin plugin) {
         this.plugin = plugin;
+        this.dataFile = new File(plugin.getDataFolder(), "vanished.yml");
+        loadData();
     }
 
     @Override
@@ -32,16 +42,9 @@ public class VanishCommand implements CommandExecutor {
             return true;
         }
 
-        UUID uuid = player.getUniqueId();
-
-        if (vanishedPlayers.contains(uuid)) {
-            setVanished(player, false);
-            player.sendMessage("§aYou are now §evisible§a!");
-        } else {
-            setVanished(player, true);
-            player.sendMessage("§aYou are now §7vanished§a!");
-        }
-
+        boolean vanished = !isVanished(player.getUniqueId());
+        setVanished(player, vanished);
+        player.sendMessage(vanished ? "§aYou are now §7vanished§a!" : "§aYou are now §evisible§a!");
         return true;
     }
 
@@ -50,40 +53,90 @@ public class VanishCommand implements CommandExecutor {
     }
 
     public void setVanished(Player player, boolean vanished) {
-        UUID uuid = player.getUniqueId();
         if (vanished) {
-            vanishedPlayers.add(uuid);
-            
-            // Following AchyMake/Minecraft-Essentials logic:
-            player.setInvisible(true);           // หายตัว (ไม่มี Effect/Particle)
-            player.setAllowFlight(true);         // บินได้
-            player.setInvulnerable(true);        // อมตะ (เลือกได้ตามความเหมาะสม)
-            player.setSleepingIgnored(true);     // ไม่ต้องนอน
-            player.setCollidable(false);         // ไม่มีแรงกระแทกกับคนอื่น
-            player.setSilent(true);              // ไม่มีเสียง (เดิน, กิน, ฯลฯ)
-            player.setCanPickupItems(false);     // ไม่เก็บไอเทม
-            
-            // Hide player from others who don't have permission to see vanished players
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                if (!online.hasPermission("utilityplus.vanish.see") && !online.equals(player)) {
-                    online.hidePlayer(plugin, player);
-                }
-            }
+            vanishedPlayers.add(player.getUniqueId());
+            applyVanishEffects(player);
+            hideFromOthers(player);
         } else {
-            vanishedPlayers.remove(uuid);
-            
-            player.setInvisible(false);
-            player.setAllowFlight(player.hasPermission("utilityplus.fly")); // บินต่อถ้ามี Permission fly
-            player.setInvulnerable(false);
-            player.setSleepingIgnored(false);
-            player.setCollidable(true);
-            player.setSilent(false);
-            player.setCanPickupItems(true);
-            
-            // Show player to everyone
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                online.showPlayer(plugin, player);
+            vanishedPlayers.remove(player.getUniqueId());
+            clearVanishEffects(player);
+            showToEveryone(player);
+        }
+        saveData();
+    }
+
+    public void applyPersistentVanish(Player player) {
+        if (!isVanished(player.getUniqueId())) {
+            return;
+        }
+        applyVanishEffects(player);
+        hideFromOthers(player);
+    }
+
+    public void hideVanishedPlayersFrom(Player viewer) {
+        if (viewer.hasPermission("utilityplus.vanish.see")) {
+            return;
+        }
+
+        for (Player vanished : Bukkit.getOnlinePlayers()) {
+            if (!vanished.equals(viewer) && isVanished(vanished.getUniqueId())) {
+                PaperFoliaTasks.runForPlayer(plugin, viewer, () -> viewer.hidePlayer(plugin, vanished));
             }
+        }
+    }
+
+    private void applyVanishEffects(Player player) {
+        player.setInvisible(true);
+        player.setAllowFlight(true);
+        player.setInvulnerable(true);
+        player.setSleepingIgnored(true);
+        player.setCollidable(false);
+        player.setSilent(true);
+        player.setCanPickupItems(false);
+    }
+
+    private void clearVanishEffects(Player player) {
+        player.setInvisible(false);
+        player.setAllowFlight(player.hasPermission("utilityplus.fly"));
+        player.setInvulnerable(false);
+        player.setSleepingIgnored(false);
+        player.setCollidable(true);
+        player.setSilent(false);
+        player.setCanPickupItems(true);
+    }
+
+    private void hideFromOthers(Player vanishedPlayer) {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            if (!viewer.equals(vanishedPlayer) && !viewer.hasPermission("utilityplus.vanish.see")) {
+                PaperFoliaTasks.runForPlayer(plugin, viewer, () -> viewer.hidePlayer(plugin, vanishedPlayer));
+            }
+        }
+    }
+
+    private void showToEveryone(Player player) {
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            PaperFoliaTasks.runForPlayer(plugin, viewer, () -> viewer.showPlayer(plugin, player));
+        }
+    }
+
+    private void loadData() {
+        dataConfig = YamlConfiguration.loadConfiguration(dataFile);
+        List<String> uuids = dataConfig.getStringList("vanished");
+        for (String uuid : uuids) {
+            try {
+                vanishedPlayers.add(UUID.fromString(uuid));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+    }
+
+    public void saveData() {
+        plugin.getDataFolder().mkdirs();
+        dataConfig.set("vanished", vanishedPlayers.stream().map(UUID::toString).toList());
+        try {
+            dataConfig.save(dataFile);
+        } catch (IOException e) {
+            plugin.getLogger().warning("[Vanish] Failed to save vanished.yml: " + e.getMessage());
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.utilityplus.listeners;
 
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -34,7 +35,7 @@ public class JoinMessageListener implements Listener {
 
         boolean broadcast = plugin.getConfig().getBoolean("join-message.broadcast", true);
         if (broadcast) {
-            plugin.getServer().broadcastMessage(message);
+            PaperFoliaTasks.broadcast(plugin, message);
         }
     }
 
@@ -56,7 +57,7 @@ public class JoinMessageListener implements Listener {
 
         boolean broadcast = plugin.getConfig().getBoolean("leave-message.broadcast", true);
         if (broadcast) {
-            plugin.getServer().broadcastMessage(message);
+            PaperFoliaTasks.broadcast(plugin, message);
         }
     }
 

@@ -7,7 +7,7 @@ plugins {
 
 group = 'com.example'
 version = '1.0.0'
-description = 'EssentialsPlugin - SetSpawn, SetHome, RTP, SetWarp'
+description = 'UtilityPlus - spawn, homes, TPA, chat, teams, stats, and admin utilities'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -26,6 +26,11 @@ dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
 processResources {
     def props = [version: version]
     inputs.properties props
@@ -40,11 +45,15 @@ shadowJar {
     archiveFileName.set("${project.name}-${project.version}.jar")
 }
 
+def mcVersion = providers.gradleProperty("minecraftVersion").orElse("1.21.11").get()
+def paperRunDir = file("run-paper")
+def foliaRunDir = file("run-folia")
+
 // Winds-Studio/Leaf Configuration
 def leafVersion = "1.21.11"
-def leafBuild = "120"
+def leafBuild = "121"
 def leafJarName = "leaf-${leafVersion}-${leafBuild}.jar"
-def leafDownloadUrl = "https://github.com/Winds-Studio/Leaf/releases/download/ver-${leafVersion}/${leafJarName}"
+def leafDownloadUrl = "https://api.leafmc.one/v2/projects/leaf/versions/${leafVersion}/builds/${leafBuild}/downloads/${leafJarName}"
 def serverDir = file("run")
 
 task downloadLeaf(type: Download) {
@@ -59,7 +68,7 @@ task setupServer(dependsOn: [downloadLeaf, shadowJar]) {
         
         // Copy plugin to run/plugins
         def pluginsDir = new File(serverDir, "plugins")
-        if (!pluginsDir.exists()) pluginsDir.mkdirs()
+        if (!pluginsDir.exists()) pluginsDir.mkdirs()o
         
         copy {
             from shadowJar.archiveFile
@@ -85,9 +94,25 @@ task runLeaf(type: JavaExec, dependsOn: setupServer) {
     standardInput = System.in
 }
 
-// run-paper configuration (for standard Paper testing)
+// Paper run configuration
 runServer {
-    minecraftVersion("1.21.1")
+    minecraftVersion(mcVersion)
+    runDirectory(paperRunDir)
+}
+
+tasks.register("runPaper") {
+    group = "run paper"
+    description = "Runs a Paper test server in ./run-paper"
+    dependsOn tasks.named("runServer")
+}
+
+runPaper {
+    folia {
+        registerTask {
+            minecraftVersion(mcVersion)
+            runDirectory(foliaRunDir)
+        }
+    }
 }
 
 build.dependsOn shadowJar

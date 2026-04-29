@@ -76,6 +76,12 @@ public class TabCompleterManager implements TabCompleter {
             return Collections.emptyList();
         }
 
+        // ── Summon ───────────────────────────────────────────────────
+        if (cmd.equals("s")) {
+            if (args.length != 1) return Collections.emptyList();
+            return onlinePlayers(sender, args[0]);
+        }
+
         // ── PM / reply ───────────────────────────────────────────────
         if (cmd.equals("r") || cmd.equals("reply")) {
             return Collections.emptyList();

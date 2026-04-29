@@ -1,6 +1,7 @@
 package com.example.utilityplus.managers;
 
 import com.example.utilityplus.UtilityPlus;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -140,7 +141,7 @@ public class TeamManager {
 
     private void startOfflineChecker() {
         // Check every 60 seconds
-        offlineCheckTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, (task) -> {
+        offlineCheckTask = PaperFoliaTasks.runGlobalTimer(plugin, (task) -> {
             if (offlineKickMinutes <= 0) return;
             long now = System.currentTimeMillis();
             long threshold = offlineKickMinutes * 60_000L;
@@ -403,7 +404,10 @@ public class TeamManager {
         for (UUID uuid : team.getMembers().keySet()) {
             if (uuid.equals(exclude)) continue;
             Player p = Bukkit.getPlayer(uuid);
-            if (p != null) p.sendMessage("§7[§6" + team.displayName + "§7] " + message);
+            if (p != null) {
+                UtilityPlus plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(UtilityPlus.class);
+                PaperFoliaTasks.runForSender(plugin, p, () -> p.sendMessage("§7[§6" + team.displayName + "§7] " + message));
+            }
         }
     }
 }

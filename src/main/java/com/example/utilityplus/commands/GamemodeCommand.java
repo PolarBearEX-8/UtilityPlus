@@ -1,10 +1,13 @@
 package com.example.utilityplus.commands;
 
+import com.example.utilityplus.UtilityPlus;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class GamemodeCommand implements CommandExecutor {
 
@@ -58,17 +61,21 @@ public class GamemodeCommand implements CommandExecutor {
             target = (Player) sender;
         }
 
-        // Set gamemode
-        target.setGameMode(mode);
-
         String modeName = mode.name().toLowerCase();
         String displayMode = modeName.substring(0, 1).toUpperCase() + modeName.substring(1);
+        UtilityPlus plugin = JavaPlugin.getPlugin(UtilityPlus.class);
 
         if (target == sender) {
+            target.setGameMode(mode);
             target.sendMessage("§aYour gamemode has been changed to §e" + displayMode + "§a!");
         } else {
-            target.sendMessage("§aYour gamemode has been changed to §e" + displayMode + " §aby §e" + sender.getName() + "§a!");
-            sender.sendMessage("§aChanged §e" + target.getName() + "§a's gamemode to §e" + displayMode + "§a!");
+            String senderName = sender.getName();
+            PaperFoliaTasks.runForPlayer(plugin, target, () -> {
+                target.setGameMode(mode);
+                target.sendMessage("§aYour gamemode has been changed to §e" + displayMode + " §aby §e" + senderName + "§a!");
+                PaperFoliaTasks.runForSender(plugin, sender, () ->
+                        sender.sendMessage("§aChanged §e" + target.getName() + "§a's gamemode to §e" + displayMode + "§a!"));
+            });
         }
 
         return true;

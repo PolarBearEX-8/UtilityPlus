@@ -1,7 +1,7 @@
 package com.example.utilityplus.managers;
 
 import com.example.utilityplus.UtilityPlus;
-import org.bukkit.Bukkit;
+import com.example.utilityplus.util.PaperFoliaTasks;
 
 import java.lang.management.ManagementFactory;
 import com.sun.management.OperatingSystemMXBean;
@@ -26,7 +26,7 @@ public class CpuMonitor {
 
     private void startSampling() {
         // Sample every second (20 ticks)
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+        PaperFoliaTasks.runAsyncTimer(plugin, task -> {
             double systemLoad = osBean.getCpuLoad() * 100;
             double processLoad = osBean.getProcessCpuLoad() * 100;
 

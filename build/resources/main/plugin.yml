@@ -3,105 +3,105 @@ version: 1.0.0
 main: com.example.utilityplus.UtilityPlus
 api-version: '1.21'
 folia-supported: true
-description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+description: Spawn, homes, TPA, chat, teams, stats, and admin utilities
 author: CADS
 
 commands:
   # --- Spawn ---
   setspawn:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Set the server spawn point
     usage: /setspawn
     permission: utilityplus.setspawn
   spawn:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Teleport to spawn
     usage: /spawn
     permission: utilityplus.spawn
 
   # --- Home ---
   sethome:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Set a home slot
     usage: /sethome <1|2|3|4>
     permission: utilityplus.sethome
   home:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Open homes or teleport to a home
     usage: /home [1|2|3|4]
     permission: utilityplus.home
   delhome:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Delete a home slot
     usage: /delhome <1|2|3|4>
     permission: utilityplus.delhome
 
   # --- TPA ---
   tpa:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Request to teleport to another player
     usage: /tpa <player>
     permission: utilityplus.tpa
   tpahere:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Request another player teleport to you
     usage: /tpahere <player>
     permission: utilityplus.tpa
   tpaccept:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Accept a pending teleport request
     usage: /tpaccept
     permission: utilityplus.tpa
   tpdeny:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Deny a pending teleport request
     usage: /tpdeny
     permission: utilityplus.tpa
   tpcancel:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Cancel outgoing teleport requests
     usage: /tpcancel
     permission: utilityplus.tpa
   tpaon:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Enable incoming teleport requests
     usage: /tpaon
     permission: utilityplus.tpa
   tpaoff:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Disable incoming teleport requests
     usage: /tpaoff
     permission: utilityplus.tpa
 
   # --- Chat ---
   chat:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Manage chat preferences
     usage: /chat <on|off|teamon|teamoff|pmon|pmoff|team>
     permission: utilityplus.chat
   chatsettings:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: View chat settings
     usage: /chatsettings
     permission: utilityplus.chat
 
   # --- PM ---
   msg:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Send a private message
     usage: /msg <player> <message>
     permission: utilityplus.pm
   tell:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Send a private message
     usage: /tell <player> <message>
     permission: utilityplus.pm
   w:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Send a private message
     usage: /w <player> <message>
     permission: utilityplus.pm
   whisper:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Send a private message
     usage: /whisper <player> <message>
     permission: utilityplus.pm
   dm:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Send a private message
     usage: /dm <player> <message>
     permission: utilityplus.pm
   pm:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Send a private message
     usage: /pm <player> <message>
     permission: utilityplus.pm
   r:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Reply to the last private message
     usage: /r <message>
     permission: utilityplus.pm
   reply:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Reply to the last private message
     usage: /reply <message>
     permission: utilityplus.pm
 
@@ -188,34 +188,34 @@ permissions:
     description: Access the plugin help menu
     default: true
   utilityplus.setspawn:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Set the server spawn point
     default: op
   utilityplus.spawn:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Teleport to spawn
     default: true
   utilityplus.sethome:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Set homes
     default: true
   utilityplus.home:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Use homes
     default: true
   utilityplus.delhome:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Delete homes
     default: true
   utilityplus.tpa:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Use teleport requests
     default: true
   utilityplus.chat:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Manage chat preferences
     default: true
   utilityplus.pm:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Send private messages
     default: true
   utilityplus.team:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Use the team system
     default: true
   utilityplus.anvil.color:
-    description: UtilityPlus — Spawn, Home (GUI), TPA, Chat, PM, Team, Anvil Color
+    description: Use color codes in anvil item names
     default: true
   utilityplus.reload:
     description: Reload UtilityPlus config and data

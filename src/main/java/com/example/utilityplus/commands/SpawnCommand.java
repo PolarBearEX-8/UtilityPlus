@@ -1,6 +1,7 @@
 package com.example.utilityplus.commands;
 
 import com.example.utilityplus.managers.SpawnManager;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -65,9 +66,14 @@ public class SpawnCommand implements CommandExecutor {
         int warmup = spawnManager.getWarmupSeconds();
         if (warmup <= 0) {
             spawnManager.applyCooldown(player.getUniqueId());
-            player.teleport(spawnManager.getSpawn());
-            player.sendMessage("§aTeleported to spawn!");
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+            PaperFoliaTasks.teleport(player, spawnManager.getSpawn(), spawnManager.getPlugin(), success -> {
+                if (!success) {
+                    player.sendMessage("§cTeleport failed.");
+                    return;
+                }
+                player.sendMessage("§aTeleported to spawn!");
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+            });
             return true;
         }
 
@@ -77,7 +83,7 @@ public class SpawnCommand implements CommandExecutor {
         AtomicInteger remaining = new AtomicInteger(warmup);
 
         // Use Folia EntityScheduler for player-specific warmup
-        ScheduledTask task = player.getScheduler().runAtFixedRate(spawnManager.getPlugin(), (t) -> {
+        ScheduledTask task = PaperFoliaTasks.runForPlayerTimer(spawnManager.getPlugin(), player, (t) -> {
             if (!player.isOnline()) {
                 spawnManager.cancelWarmup(player.getUniqueId());
                 t.cancel();
@@ -102,10 +108,15 @@ public class SpawnCommand implements CommandExecutor {
             spawnManager.cancelWarmup(player.getUniqueId());
             spawnManager.applyCooldown(player.getUniqueId());
             t.cancel();
-            player.teleport(spawnManager.getSpawn());
-            player.sendMessage("§aTeleported to spawn!");
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
-        }, null, 1L, 20L);
+            PaperFoliaTasks.teleport(player, spawnManager.getSpawn(), spawnManager.getPlugin(), success -> {
+                if (!success) {
+                    player.sendMessage("§cTeleport failed.");
+                    return;
+                }
+                player.sendMessage("§aTeleported to spawn!");
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+            });
+        }, 1L, 20L);
 
         spawnManager.startWarmup(player.getUniqueId(), task);
         return true;

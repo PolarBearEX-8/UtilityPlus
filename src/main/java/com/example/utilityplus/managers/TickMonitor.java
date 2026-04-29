@@ -1,6 +1,7 @@
 package com.example.utilityplus.managers;
 
 import com.example.utilityplus.UtilityPlus;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -38,12 +39,7 @@ public class TickMonitor {
             lastTickStartTime = currentTime;
         };
 
-        try {
-            Class.forName("io.papermc.paper.threadedregions.RegionScheduler");
-            Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, t -> task.run(), 1L, 1L);
-        } catch (ClassNotFoundException e) {
-            Bukkit.getScheduler().runTaskTimer(plugin, task, 1L, 1L);
-        }
+        PaperFoliaTasks.runGlobalTimer(plugin, t -> task.run(), 1L, 1L);
     }
 
     protected synchronized void recordTick(long durationNanos) {

@@ -1,10 +1,12 @@
 package com.example.utilityplus.commands;
 
+import com.example.utilityplus.UtilityPlus;
 import com.example.utilityplus.managers.ChatManager;
 import com.example.utilityplus.managers.TeamManager;
 import com.example.utilityplus.managers.TeamManager.Invite;
 import com.example.utilityplus.managers.TeamManager.Role;
 import com.example.utilityplus.managers.TeamManager.Team;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -14,6 +16,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Map;
 import java.util.UUID;
@@ -22,10 +25,12 @@ public class TeamCommand implements CommandExecutor {
 
     private final TeamManager teamManager;
     private final ChatManager chatManager;
+    private final UtilityPlus plugin;
 
     public TeamCommand(TeamManager teamManager, ChatManager chatManager) {
         this.teamManager = teamManager;
         this.chatManager = chatManager;
+        this.plugin = JavaPlugin.getPlugin(UtilityPlus.class);
     }
 
     @Override
@@ -79,7 +84,7 @@ public class TeamCommand implements CommandExecutor {
 
         // Clickable notification to target
         Team team = teamManager.getPlayerTeam(p.getUniqueId());
-        target.sendMessage("§6§l[Team Invite] §r§e" + p.getName()
+        PaperFoliaTasks.send(plugin, target, "§6§l[Team Invite] §r§e" + p.getName()
                 + " §finvited you to join §6" + team.displayName + "§f!");
 
         TextComponent accept = new TextComponent("§a§l[✔ Accept]");
@@ -92,8 +97,10 @@ public class TeamCommand implements CommandExecutor {
         deny.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/team deny"));
         deny.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text("§cDeny the invite")));
 
-        target.spigot().sendMessage(accept, space, deny);
-        target.sendMessage("§7Expires in §e" + teamManager.getInviteTimeoutSeconds() + "s§7.");
+        PaperFoliaTasks.runForPlayer(plugin, target, () -> {
+            target.spigot().sendMessage(accept, space, deny);
+            target.sendMessage("§7Expires in §e" + teamManager.getInviteTimeoutSeconds() + "s§7.");
+        });
         return true;
     }
 
@@ -119,7 +126,7 @@ public class TeamCommand implements CommandExecutor {
         teamManager.removeInvite(p.getUniqueId());
         p.sendMessage("§eInvite denied.");
         Player inviter = Bukkit.getPlayer(inv.inviterUUID);
-        if (inviter != null) inviter.sendMessage("§e" + p.getName() + " §7denied your invite.");
+        if (inviter != null) PaperFoliaTasks.send(plugin, inviter, "§e" + p.getName() + " §7denied your invite.");
         return true;
     }
 
@@ -178,7 +185,7 @@ public class TeamCommand implements CommandExecutor {
 
         teamManager.kickMember(team, target.getUniqueId());
         p.sendMessage("§aKicked §e" + target.getName() + "§a.");
-        target.sendMessage("§cYou were kicked from §e" + team.displayName + "§c.");
+        PaperFoliaTasks.send(plugin, target, "§cYou were kicked from §e" + team.displayName + "§c.");
         TeamManager.broadcastToTeam(team, "§e" + target.getName() + " §7was kicked.", target.getUniqueId());
         return true;
     }
@@ -197,7 +204,7 @@ public class TeamCommand implements CommandExecutor {
 
         Role newRole = team.getRole(target.getUniqueId());
         TeamManager.broadcastToTeam(team, "§e" + target.getName() + " §7→ §6" + newRole.getDisplay(), null);
-        target.sendMessage("§aPromoted to §6" + newRole.getDisplay() + "§a!");
+        PaperFoliaTasks.send(plugin, target, "§aPromoted to §6" + newRole.getDisplay() + "§a!");
         return true;
     }
 
@@ -215,7 +222,7 @@ public class TeamCommand implements CommandExecutor {
 
         Role newRole = team.getRole(target.getUniqueId());
         TeamManager.broadcastToTeam(team, "§e" + target.getName() + " §7demoted to §6" + newRole.getDisplay(), null);
-        target.sendMessage("§cDemoted to §6" + newRole.getDisplay() + "§c.");
+        PaperFoliaTasks.send(plugin, target, "§cDemoted to §6" + newRole.getDisplay() + "§c.");
         return true;
     }
 
@@ -267,7 +274,10 @@ public class TeamCommand implements CommandExecutor {
         String fmt = "§7[§6" + team.displayName + "§7] §f" + sender.getName() + "§7: §f" + message;
         for (UUID uuid : team.getMembers().keySet()) {
             Player m = Bukkit.getPlayer(uuid);
-            if (m != null) m.sendMessage(fmt);
+            if (m != null) {
+                UtilityPlus plugin = JavaPlugin.getPlugin(UtilityPlus.class);
+                PaperFoliaTasks.send(plugin, m, fmt);
+            }
         }
     }
 

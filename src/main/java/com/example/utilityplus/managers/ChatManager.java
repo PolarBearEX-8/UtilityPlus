@@ -1,8 +1,8 @@
 package com.example.utilityplus.managers;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Tracks per-player chat preferences (all in-memory, resets on restart).
@@ -16,13 +16,13 @@ import java.util.UUID;
  */
 public class ChatManager {
 
-    private final Set<UUID> globalMuted   = new HashSet<>();
-    private final Set<UUID> teamChatMuted = new HashSet<>();
-    private final Set<UUID> pmMuted       = new HashSet<>();
-    private final Set<UUID> teamMode      = new HashSet<>();
+    private final Set<UUID> globalMuted   = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> teamChatMuted = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> pmMuted       = ConcurrentHashMap.newKeySet();
+    private final Set<UUID> teamMode      = ConcurrentHashMap.newKeySet();
 
     // Last PM sender per player (for /r /reply)
-    private final java.util.Map<UUID, UUID> lastPmSender = new java.util.HashMap<>();
+    private final java.util.Map<UUID, UUID> lastPmSender = new ConcurrentHashMap<>();
 
     // ── Global chat ──────────────────────────────────────────────────
     public boolean isGlobalMuted(UUID uuid)   { return globalMuted.contains(uuid); }

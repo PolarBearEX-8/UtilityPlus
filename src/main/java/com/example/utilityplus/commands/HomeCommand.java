@@ -2,6 +2,7 @@ package com.example.utilityplus.commands;
 
 import com.example.utilityplus.gui.HomeGUI;
 import com.example.utilityplus.managers.HomeManager;
+import com.example.utilityplus.util.PaperFoliaTasks;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -104,9 +105,14 @@ public class HomeCommand implements CommandExecutor {
         int warmup = homeManager.getWarmupSeconds();
 
         if (warmup <= 0) {
-            player.teleport(dest);
-            player.sendMessage("§aTeleported to home §e" + slot + "§a!");
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+            PaperFoliaTasks.teleport(player, dest, homeManager.getPlugin(), success -> {
+                if (!success) {
+                    player.sendMessage("§cTeleport failed.");
+                    return;
+                }
+                player.sendMessage("§aTeleported to home §e" + slot + "§a!");
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+            });
             return;
         }
 
@@ -116,7 +122,7 @@ public class HomeCommand implements CommandExecutor {
         AtomicInteger remaining = new AtomicInteger(warmup);
 
         // Use Folia EntityScheduler for player-specific warmup
-        ScheduledTask task = player.getScheduler().runAtFixedRate(homeManager.getPlugin(), (t) -> {
+        ScheduledTask task = PaperFoliaTasks.runForPlayerTimer(homeManager.getPlugin(), player, (t) -> {
             if (!player.isOnline()) {
                 homeManager.cancelWarmup(player.getUniqueId());
                 t.cancel();
@@ -141,10 +147,15 @@ public class HomeCommand implements CommandExecutor {
             // TP!
             homeManager.cancelWarmup(player.getUniqueId());
             t.cancel();
-            player.teleport(dest);
-            player.sendMessage("§aTeleported to home §e" + slot + "§a!");
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
-        }, null, 1L, 20L);
+            PaperFoliaTasks.teleport(player, dest, homeManager.getPlugin(), success -> {
+                if (!success) {
+                    player.sendMessage("§cTeleport failed.");
+                    return;
+                }
+                player.sendMessage("§aTeleported to home §e" + slot + "§a!");
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+            });
+        }, 1L, 20L);
 
         homeManager.startWarmup(player.getUniqueId(), task);
     }
