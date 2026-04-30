@@ -126,7 +126,23 @@ public class TabCompleterManager implements TabCompleter {
 
             case "r":
             case "reply":
+            case "l":
+            case "last":
                 return empty(); // free-text
+
+            case "ignore":
+            case "ignorehard":
+            case "ignoredeathmsgs":
+                if (args.length == 1) return filterOnlinePlayers(player, args[0]);
+                return empty();
+
+            case "ignorelist":
+            case "togglechat":
+            case "toggleprivatemsgs":
+            case "toggledeathmsgs":
+            case "toggledeathmsgshard":
+            case "queue":
+                return empty();
 
             // ── Team ─────────────────────────────────────────────────
             case "team":

@@ -1,6 +1,6 @@
 package com.example.utilityplus.listeners;
 
-import com.example.utilityplus.util.PaperFoliaTasks;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,21 +21,19 @@ public class JoinMessageListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
+        if (plugin.getConfig().getBoolean("join-message.hide-vanilla", true)) {
+            event.setJoinMessage(null);
+        }
+
         if (!plugin.getConfig().getBoolean("join-message.enabled", true)) {
             return;
         }
 
-        String message = plugin.getConfig().getString("join-message.message", "&a&l+ &7{player} &ejoined the server!");
+        String message = plugin.getConfig().getString("join-message.message", "&3{player} joined the game");
         message = formatMessage(message, player);
 
-        boolean hideVanilla = plugin.getConfig().getBoolean("join-message.hide-vanilla", true);
-        if (hideVanilla) {
-            event.setJoinMessage(null);
-        }
-
-        boolean broadcast = plugin.getConfig().getBoolean("join-message.broadcast", true);
-        if (broadcast) {
-            PaperFoliaTasks.broadcast(plugin, message);
+        if (plugin.getConfig().getBoolean("join-message.broadcast", true)) {
+            event.setJoinMessage(message);
         }
     }
 
@@ -43,31 +41,30 @@ public class JoinMessageListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
+        if (plugin.getConfig().getBoolean("leave-message.hide-vanilla", true)) {
+            event.setQuitMessage(null);
+        }
+
         if (!plugin.getConfig().getBoolean("leave-message.enabled", true)) {
             return;
         }
 
-        String message = plugin.getConfig().getString("leave-message.message", "&c&l- &7{player} &eleft the server!");
+        String message = plugin.getConfig().getString("leave-message.message", "&3{player} left the game");
         message = formatMessage(message, player);
 
-        boolean hideVanilla = plugin.getConfig().getBoolean("leave-message.hide-vanilla", true);
-        if (hideVanilla) {
-            event.setQuitMessage(null);
-        }
-
-        boolean broadcast = plugin.getConfig().getBoolean("leave-message.broadcast", true);
-        if (broadcast) {
-            PaperFoliaTasks.broadcast(plugin, message);
+        if (plugin.getConfig().getBoolean("leave-message.broadcast", true)) {
+            event.setQuitMessage(message);
         }
     }
 
     private String formatMessage(String message, Player player) {
-        return message
+        message = message
                 .replace("{player}", player.getName())
                 .replace("{displayname}", player.getDisplayName())
                 .replace("{world}", player.getWorld().getName())
                 .replace("{online}", String.valueOf(plugin.getServer().getOnlinePlayers().size()))
-                .replace("{max}", String.valueOf(plugin.getServer().getMaxPlayers()))
-                .replace("&", "§");
+                .replace("{max}", String.valueOf(plugin.getServer().getMaxPlayers()));
+
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 }

@@ -20,9 +20,11 @@ spawn:
 # Completely independent from the /setspawn system above.
 # -----------------------------------------------
 random-respawn:
-  enabled: false
+  enabled: true
   min-radius: 0
-  max-radius: 200
+  max-radius: 1000
+  # How many locations to try before falling back to spawn
+  attempts: 48
   # The world name where random respawn should happen (default to world)
   world: "world"
 
@@ -64,31 +66,80 @@ team:
 # Use & for color codes (e.g., &a = green, &c = red, &l = bold, &e = yellow)
 
 join-message:
-  enabled: true
+  enabled: false
   # Hide the default Minecraft join message
   hide-vanilla: true
   # Broadcast to all players
   broadcast: true
   # Message shown to everyone when player joins
-  # Default: "{player} joined the game" (vanilla Minecraft style)
   message: "&3{player} joined the game"
 
 leave-message:
-  enabled: true
+  enabled: false
   # Hide the default Minecraft leave message
   hide-vanilla: true
   # Broadcast to all players
   broadcast: true
   # Message shown when player leaves
-  # Default: "{player} left the game" (vanilla Minecraft style)
   message: "&3{player} left the game"
+
+# -----------------------------------------------
+# Custom Death Message Settings
+# -----------------------------------------------
+# Placeholders: {message} = original Minecraft death message,
+# {player} = dead player name, {killer} = killer name (if any)
+# Use & for color codes.
+
+death-message:
+  enabled: true
+  # Keep the original Minecraft death message text, but recolor it below.
+  message: "{message}"
+  # Main message color
+  message-color: "&4"
+  # Player/killer name color
+  name-color: "&3"
+
+# -----------------------------------------------
+# Tab List Header/Footer Settings
+# -----------------------------------------------
+# Placeholders: %server_tps_1_colored%, %server_online%,
+# %player_ping%, %server_uptime%
+
+tab-list:
+  enabled: true
+  # How often to refresh dynamic placeholders, in seconds
+  update-interval: 1
+  header:
+    - ""
+    - "&7&o&l  2BUILDERS      "
+    - "&7&o&l  2TOOLS &6&o- Thailand"
+    - ""
+  footer:
+    - ""
+    - "%server_tps_1_colored% &3tps - %server_online% players - %player_ping% ping - %server_uptime% uptime"
+    - ""
+    - "&7contact: @ dsc.gg/2b2t-th"
+    - "&7discord: dsc.gg/2b2t-th"
+    - "&7website: 2b2t-th.org"
+    - "  &7If you need to contact us or found a bug, please contact us on discord  "
+    - ""
 
 # -----------------------------------------------
 # Broadcast Settings
 # -----------------------------------------------
 broadcast:
   # Prefix shown before broadcast messages
-  prefix: "&6&l[Broadcast]&r "
+  prefix: "&6&l[Alert]&r "
+
+# -----------------------------------------------
+# Queue Command Settings
+# -----------------------------------------------
+queue:
+  message:
+    - "&6Queue lengths:"
+    - "&7Regular: &f0"
+    - "&7Priority: &f0"
+    - "&7Online: &f{online}/{max}"
 
 # -----------------------------------------------
 # Help Messages Settings

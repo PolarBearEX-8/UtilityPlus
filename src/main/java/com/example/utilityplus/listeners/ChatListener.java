@@ -4,6 +4,7 @@ import com.example.utilityplus.commands.TeamCommand;
 import com.example.utilityplus.managers.ChatManager;
 import com.example.utilityplus.managers.TeamManager;
 import com.example.utilityplus.managers.TeamManager.Team;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -25,7 +26,8 @@ public class ChatListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         Player sender = event.getPlayer();
-        String message = event.getMessage();
+        String message = highlightMessage(event.getMessage());
+        event.setMessage(message);
 
         // ── Team mode: redirect all messages to team chat ────────────
         if (chatManager.isTeamMode(sender.getUniqueId())) {
@@ -51,7 +53,8 @@ public class ChatListener implements Listener {
         Iterator<Player> recipients = event.getRecipients().iterator();
         while (recipients.hasNext()) {
             Player recipient = recipients.next();
-            if (chatManager.isGlobalMuted(recipient.getUniqueId())) {
+            if (chatManager.isGlobalMuted(recipient.getUniqueId())
+                    || chatManager.isIgnoring(recipient.getUniqueId(), sender.getName())) {
                 recipients.remove();
             }
         }
@@ -59,5 +62,13 @@ public class ChatListener implements Listener {
         if (!chatManager.isGlobalMuted(sender.getUniqueId())) {
             event.getRecipients().add(sender);
         }
+    }
+
+    private String highlightMessage(String message) {
+        if (message == null || !message.startsWith(">")) {
+            return message;
+        }
+
+        return ChatColor.GREEN + message;
     }
 }

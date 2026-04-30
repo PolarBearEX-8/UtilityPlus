@@ -39,6 +39,9 @@ public class PMCommand implements CommandExecutor {
         if (label.equalsIgnoreCase("r") || label.equalsIgnoreCase("reply")) {
             return handleReply(from, args);
         }
+        if (label.equalsIgnoreCase("l") || label.equalsIgnoreCase("last")) {
+            return handleLast(from, args);
+        }
 
         // /msg /tell /w /whisper /dm /pm <player> <message>
         if (args.length < 2) {
@@ -84,10 +87,38 @@ public class PMCommand implements CommandExecutor {
         return true;
     }
 
+    private boolean handleLast(Player from, String[] args) {
+        if (args.length < 1) {
+            from.sendMessage("Â§cUsage: /last <message>");
+            return true;
+        }
+
+        UUID lastTargetUUID = chatManager.getLastPmTarget(from.getUniqueId());
+        if (lastTargetUUID == null) {
+            from.sendMessage("Â§cYou have no last messaged player!");
+            return true;
+        }
+
+        Player to = from.getServer().getPlayer(lastTargetUUID);
+        if (to == null || !to.isOnline()) {
+            from.sendMessage("Â§cThat player is no longer online.");
+            return true;
+        }
+
+        String message = buildMessage(args, 0);
+        sendPM(from, to, message);
+        return true;
+    }
+
     private void sendPM(Player from, Player to, String message) {
         // Check if target has PM muted
         if (chatManager.isPmMuted(to.getUniqueId())) {
             from.sendMessage("§e" + to.getName() + " §7is not accepting private messages.");
+            return;
+        }
+
+        if (chatManager.isIgnoring(to.getUniqueId(), from.getName())) {
+            from.sendMessage("Â§e" + to.getName() + " Â§7is ignoring you.");
             return;
         }
 
@@ -102,6 +133,8 @@ public class PMCommand implements CommandExecutor {
         // Track last sender for /reply
         chatManager.setLastPmSender(to.getUniqueId(),   from.getUniqueId());
         chatManager.setLastPmSender(from.getUniqueId(), to.getUniqueId());
+        chatManager.setLastPmTarget(from.getUniqueId(), to.getUniqueId());
+        chatManager.setLastPmTarget(to.getUniqueId(), from.getUniqueId());
     }
 
     private String buildMessage(String[] args, int startIndex) {

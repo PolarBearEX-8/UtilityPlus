@@ -33,8 +33,10 @@ public class ReloadCommand implements CommandExecutor {
         // 3. Reinitialize each manager — re-reads config values + data files
         plugin.getSpawnManager().reload();
         plugin.getHomeManager().reload();
+        plugin.getChatManager().reload();
         plugin.getTeamManager().reload();
         plugin.getStatsManager().reload();
+        plugin.getTabListManager().reload();
 
         sender.sendMessage("§a§lUtilityPlus reloaded!");
         sender.sendMessage("§7config.yml §a✔  §7spawn §a✔  §7homes §a✔  §7teams §a✔  §7stats §a✔");

@@ -3,16 +3,23 @@ package com.example.utilityplus.managers;
 import com.example.utilityplus.UtilityPlus;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
+import org.bukkit.HeightMap;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.WorldBorder;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SpawnManager {
 
@@ -36,7 +43,21 @@ public class SpawnManager {
     private boolean rtpEnabled;
     private int rtpMinRadius;
     private int rtpMaxRadius;
+    private int rtpAttempts;
     private String rtpWorldName;
+
+    private static final Set<Material> UNSAFE_RANDOM_RESPAWN_GROUND = EnumSet.of(
+            Material.CACTUS,
+            Material.CAMPFIRE,
+            Material.FIRE,
+            Material.LAVA,
+            Material.MAGMA_BLOCK,
+            Material.POWDER_SNOW,
+            Material.SOUL_CAMPFIRE,
+            Material.SOUL_FIRE,
+            Material.SWEET_BERRY_BUSH,
+            Material.WATER
+    );
 
     // Cooldown tracker: UUID -> last /spawn use timestamp (ms)
     private final Map<UUID, Long> cooldowns = new HashMap<>();
@@ -62,10 +83,11 @@ public class SpawnManager {
         this.cooldownSeconds  = cfg.getInt    ("spawn.tp-spawn-cooldown",         30);
         this.warmupSeconds    = cfg.getInt    ("spawn.tp-spawn-warmup",           5);
 
-        this.rtpEnabled   = cfg.getBoolean("random-respawn.enabled",     true);
-        this.rtpMinRadius = cfg.getInt    ("random-respawn.min-radius",  50);
-        this.rtpMaxRadius = cfg.getInt    ("random-respawn.max-radius",  1000);
-        this.rtpWorldName = cfg.getString ("random-respawn.world",       "world");
+        this.rtpEnabled   = cfg.getBoolean("random-respawn.enabled", true);
+        this.rtpMinRadius = Math.max(0, cfg.getInt("random-respawn.min-radius", 50));
+        this.rtpMaxRadius = Math.max(rtpMinRadius, cfg.getInt("random-respawn.max-radius", 1000));
+        this.rtpAttempts  = Math.max(1, cfg.getInt("random-respawn.attempts", 48));
+        this.rtpWorldName = cfg.getString("random-respawn.world", "world");
     }
 
     // ---------------------------------------------------------------
@@ -255,36 +277,86 @@ public class SpawnManager {
             world = Bukkit.getWorlds().get(0);
         }
 
-        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
-        int attempts = 0;
-        Location loc;
+        Location center = getRandomRespawnCenter(world);
+        ThreadLocalRandom random = ThreadLocalRandom.current();
 
-        while (attempts < 10) {
+        for (int attempt = 0; attempt < rtpAttempts; attempt++) {
             // Polar coordinates for uniform distribution in the ring
             // θ: 0 to 2π, r: rtpMinRadius to rtpMaxRadius
-            double theta = random.nextDouble() * 2 * Math.PI;
-            double r = rtpMinRadius + (rtpMaxRadius - rtpMinRadius) * Math.sqrt(random.nextDouble());
+            double theta = random.nextDouble(0, Math.PI * 2);
+            double r = randomRadius(random);
 
-            int x = (int) Math.round(r * Math.cos(theta));
-            int z = (int) Math.round(r * Math.sin(theta));
+            int x = center.getBlockX() + (int) Math.round(r * Math.cos(theta));
+            int z = center.getBlockZ() + (int) Math.round(r * Math.sin(theta));
+            if (!isInsideWorldBorder(world, x, z)) {
+                continue;
+            }
 
-            loc = world.getHighestBlockAt(x, z).getLocation().add(0.5, 1, 0.5);
+            Location loc = world.getHighestBlockAt(x, z, HeightMap.MOTION_BLOCKING_NO_LEAVES)
+                    .getLocation()
+                    .add(0.5, 1, 0.5);
 
             if (isSafeLocation(loc)) {
+                loc.setYaw(random.nextFloat() * 360.0F);
+                loc.setPitch(0.0F);
                 return loc;
             }
-            attempts++;
         }
 
         return spawnLocation != null ? spawnLocation : world.getSpawnLocation();
     }
 
-    private boolean isSafeLocation(Location loc) {
-        org.bukkit.block.Block feet = loc.getBlock();
-        org.bukkit.block.Block head = loc.clone().add(0, 1, 0).getBlock();
-        org.bukkit.block.Block ground = loc.clone().add(0, -1, 0).getBlock();
+    private Location getRandomRespawnCenter(World world) {
+        if (spawnLocation != null && spawnLocation.getWorld() != null
+                && spawnLocation.getWorld().getName().equals(world.getName())) {
+            return spawnLocation;
+        }
 
-        return feet.getType().isAir() && head.getType().isAir() && ground.getType().isSolid() && !ground.isLiquid();
+        return world.getSpawnLocation();
+    }
+
+    private double randomRadius(ThreadLocalRandom random) {
+        if (rtpMaxRadius <= rtpMinRadius) {
+            return rtpMinRadius;
+        }
+
+        double minSquared = (double) rtpMinRadius * rtpMinRadius;
+        double maxSquared = (double) rtpMaxRadius * rtpMaxRadius;
+        return Math.sqrt(random.nextDouble(minSquared, maxSquared));
+    }
+
+    private boolean isInsideWorldBorder(World world, int x, int z) {
+        WorldBorder border = world.getWorldBorder();
+        Location center = border.getCenter();
+        double radius = border.getSize() / 2.0D;
+
+        return x + 0.5D >= center.getX() - radius
+                && x + 0.5D <= center.getX() + radius
+                && z + 0.5D >= center.getZ() - radius
+                && z + 0.5D <= center.getZ() + radius;
+    }
+
+    private boolean isSafeLocation(Location loc) {
+        World world = loc.getWorld();
+        if (world == null) {
+            return false;
+        }
+
+        int y = loc.getBlockY();
+        if (y <= world.getMinHeight() || y + 1 >= world.getMaxHeight()) {
+            return false;
+        }
+
+        Block feet = loc.getBlock();
+        Block head = loc.clone().add(0, 1, 0).getBlock();
+        Block ground = loc.clone().add(0, -1, 0).getBlock();
+        Material groundType = ground.getType();
+
+        return feet.isPassable()
+                && head.isPassable()
+                && groundType.isSolid()
+                && !ground.isLiquid()
+                && !UNSAFE_RANDOM_RESPAWN_GROUND.contains(groundType);
     }
 
     // ---------------------------------------------------------------

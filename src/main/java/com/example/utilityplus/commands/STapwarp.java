@@ -47,9 +47,9 @@ public class STapwarp implements CommandExecutor {
                 PaperFoliaTasks.runForSender(plugin, player, () -> player.sendMessage("§cSummon failed."));
                 return;
             }
-            target.sendMessage("§aYou have been summoned by §e" + playerName + "§a!");
+            //target.sendMessage("§aYou have been summoned by §e" + playerName + "§a!");
             PaperFoliaTasks.runForSender(plugin, player, () ->
-                    player.sendMessage("§aYou have summoned §e" + targetName + " §ato your location!"));
+                    player.sendMessage("§aYou have §e" + targetName + " §ato your location!"));
         });
 
         return true;

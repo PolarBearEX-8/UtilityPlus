@@ -19,6 +19,7 @@ public class UtilityPlus extends JavaPlugin {
     private ChatManager  chatManager;
     private TeamManager  teamManager;
     private StatsManager statsManager;
+    private TabListManager tabListManager;
     private VanishCommand vanishCommand;
     private TickMonitor tickMonitor;
     private CpuMonitor  cpuMonitor;
@@ -31,9 +32,10 @@ public class UtilityPlus extends JavaPlugin {
         spawnManager = new SpawnManager(this);
         homeManager  = new HomeManager(this);
         tpaManager   = new TPAManager(this);
-        chatManager  = new ChatManager();
+        chatManager  = new ChatManager(this);
         teamManager  = new TeamManager(this);
         statsManager = new StatsManager(this);
+        tabListManager = new TabListManager(this);
         tickMonitor  = new TickMonitor(this);
         cpuMonitor   = new CpuMonitor(this);
 
@@ -56,7 +58,13 @@ public class UtilityPlus extends JavaPlugin {
 
         // PM
         PMCommand pmCmd = new PMCommand(chatManager);
-        registerCommands(pmCmd, "msg", "tell", "w", "whisper", "dm", "pm", "r", "reply");
+        registerCommands(pmCmd, "msg", "tell", "w", "whisper", "dm", "pm", "r", "reply", "l", "last");
+
+        TwoBTwoTCommand twoBTwoTCommand = new TwoBTwoTCommand(this, chatManager);
+        registerCommands(twoBTwoTCommand,
+                "ignore", "ignorehard", "ignorelist", "ignoredeathmsgs",
+                "togglechat", "toggleprivatemsgs", "toggledeathmsgs", "toggledeathmsgshard",
+                "queue");
 
         // Team
         registerCommand("team", new TeamCommand(teamManager, chatManager));
@@ -100,7 +108,9 @@ public class UtilityPlus extends JavaPlugin {
             "sethome","home","delhome",
             "tpa","tpahere","tpaccept","tpdeny","tpcancel","tpaon","tpaoff",
             "chat","chatsettings",
-            "msg","tell","w","whisper","dm","pm","r","reply",
+            "msg","tell","w","whisper","dm","pm","r","reply","l","last",
+            "ignore","ignorehard","ignorelist","ignoredeathmsgs",
+            "togglechat","toggleprivatemsgs","toggledeathmsgs","toggledeathmsgshard","queue",
             "team","upreload",
             "v","bc","broadcast","gmc","gms","gmsp","gma","kill","s","helps",
             "stats", "topstats", "tpsmore", "tps"
@@ -115,8 +125,9 @@ public class UtilityPlus extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AnvilListener(), this);
         getServer().getPluginManager().registerEvents(new TeamListener(teamManager), this);
         getServer().getPluginManager().registerEvents(new JoinMessageListener(this), this);
-        getServer().getPluginManager().registerEvents(new StatsListener(statsManager), this);
+        getServer().getPluginManager().registerEvents(new StatsListener(statsManager, chatManager, this), this);
         getServer().getPluginManager().registerEvents(new StatsGUIListener(), this);
+        getServer().getPluginManager().registerEvents(new TabListListener(this, tabListManager), this);
         getServer().getPluginManager().registerEvents(new VanishListener(this, vanishCommand), this);
 
         getLogger().info("UtilityPlus enabled!");
@@ -126,8 +137,10 @@ public class UtilityPlus extends JavaPlugin {
     public void onDisable() {
         if (spawnManager != null) spawnManager.saveData();
         if (homeManager  != null) homeManager.saveData();
+        if (chatManager != null) chatManager.saveData();
         if (teamManager  != null) teamManager.saveData();
         if (statsManager != null) statsManager.saveData();
+        if (tabListManager != null) tabListManager.stop();
         if (vanishCommand != null) vanishCommand.saveData();
         getLogger().info("UtilityPlus disabled!");
     }
@@ -138,6 +151,7 @@ public class UtilityPlus extends JavaPlugin {
     public ChatManager  getChatManager()  { return chatManager; }
     public TeamManager  getTeamManager()  { return teamManager; }
     public StatsManager getStatsManager() { return statsManager; }
+    public TabListManager getTabListManager() { return tabListManager; }
 
     private void registerCommands(CommandExecutor executor, String... names) {
         for (String name : names) {

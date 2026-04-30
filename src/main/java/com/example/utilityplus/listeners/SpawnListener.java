@@ -10,7 +10,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 
-public class SpawnListener implements Listener {
+public class    SpawnListener implements Listener {
 
     private final SpawnManager spawnManager;
 

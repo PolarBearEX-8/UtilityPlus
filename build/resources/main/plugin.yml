@@ -104,6 +104,52 @@ commands:
     description: Reply to the last private message
     usage: /reply <message>
     permission: utilityplus.pm
+  l:
+    description: Message the player you last messaged
+    usage: /l <message>
+    permission: utilityplus.pm
+  last:
+    description: Message the player you last messaged
+    usage: /last <message>
+    permission: utilityplus.pm
+
+  # --- 2b2t-style chat controls ---
+  ignore:
+    description: Temporarily ignore a player
+    usage: /ignore <player>
+    permission: utilityplus.chat
+  ignorehard:
+    description: Permanently ignore a player
+    usage: /ignorehard <player>
+    permission: utilityplus.chat
+  ignorelist:
+    description: List permanently ignored players
+    usage: /ignorelist
+    permission: utilityplus.chat
+  ignoredeathmsgs:
+    description: Hide death messages from a player
+    usage: /ignoredeathmsgs <player>
+    permission: utilityplus.chat
+  togglechat:
+    description: Toggle global chat visibility
+    usage: /togglechat
+    permission: utilityplus.chat
+  toggleprivatemsgs:
+    description: Toggle private message visibility
+    usage: /toggleprivatemsgs
+    permission: utilityplus.chat
+  toggledeathmsgs:
+    description: Toggle death message visibility until restart
+    usage: /toggledeathmsgs
+    permission: utilityplus.chat
+  toggledeathmsgshard:
+    description: Toggle death message visibility permanently
+    usage: /toggledeathmsgshard
+    permission: utilityplus.chat
+  queue:
+    description: Displays current queue lengths
+    usage: /queue
+    permission: utilityplus.queue
 
   # --- Team ---
   team:
@@ -250,3 +296,6 @@ permissions:
   utilityplus.tpsmore:
     description: View detailed TPS and performance info
     default: op
+  utilityplus.queue:
+    description: View queue lengths
+    default: true

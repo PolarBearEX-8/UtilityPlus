@@ -6,6 +6,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;
@@ -13,6 +14,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class KillCommand implements CommandExecutor {
+
+    public static final String SELF_KILL_METADATA = "utilityplus-self-kill";
 
     private final UtilityPlus plugin;
     
@@ -41,6 +44,7 @@ public class KillCommand implements CommandExecutor {
 
         if (pendingConfirmation.contains(uuid)) {
             // Second time: Kill them
+            player.setMetadata(SELF_KILL_METADATA, new FixedMetadataValue(plugin, true));
             player.setHealth(0);
             //player.sendMessage("§eYou have killed yourself.");
             pendingConfirmation.remove(uuid);
