@@ -1,0 +1,134 @@
+Create a complete Minecraft 1.21.1+ death message JSON database covering EVERY vanilla death cause, Bukkit/Paper DamageCause, entity-related death, environmental death, projectile death, potion/magic death, and special-case death.
+
+Requirements:
+
+Output ONLY valid JSON.
+No markdown.
+No explanations.
+Structure the JSON by categories.
+Each category must contain 10-30 unique death messages.
+Use placeholders:
+%victim%
+%killer%
+%weapon%
+%world%
+%x%
+%y%
+%z%
+Include both serious, funny, toxic, anarchy-style, and 2b2t-inspired messages.
+Avoid duplicate messages.
+Make messages feel modern and multiplayer-oriented.
+Include rare/special edge-case deaths.
+Support Minecraft Java Edition 1.21.1 mechanics.
+
+Include ALL possible categories and subcategories, including:
+
+generic
+player_kill
+mob_kill
+melee
+projectile
+arrow
+trident
+fireball
+wind_charge
+thrown_potion
+magic
+poison
+wither
+dragon_breath
+sonic_boom
+explosion
+TNT
+creeper
+bed_explosion
+respawn_anchor
+crystal
+block_explosion
+entity_explosion
+fire
+fire_tick
+lava
+campfire
+hot_floor
+magma
+lightning
+drowning
+suffocation
+starvation
+dehydration
+freeze
+powder_snow
+cactus
+berry_bush
+stalagmite
+stalactite
+falling_block
+anvil
+dripstone
+contact
+cramming
+thorns
+fly_into_wall
+elytra_crash
+fall
+void
+world_border
+outside_border
+bad_respawn_point
+generic_kill
+command_kill
+suicide
+intentional_game_design
+custom
+unknown
+disconnected
+combat_log
+vehicle_crash
+minecart
+boat_crash
+goat_ram
+bee_sting
+pufferfish
+guardian_laser
+warden
+ender_pearl
+kinetic_energy
+mob_attack_no_aggro
+raid
+trial_chamber
+mace_smash
+sweep_attack
+potion_damage
+indirect_magic
+player_using_item
+wolf_attack
+iron_golem
+snow_golem
+piglin
+hoglin
+zoglin
+breeze
+bogged
+armadillo
+camel
+frog
+goat
+all hostile mobs
+all passive mobs capable of damage
+all boss-related deaths
+
+JSON format example:
+
+{
+"lava": [
+"%victim% tried swimming in lava",
+"%victim% became obsidian memories"
+],
+"fall": [
+"%victim% forgot gravity exists"
+]
+}
+
+Make the output EXTREMELY large and comprehensive.
+Generate at least 300-1000 total death messages.
