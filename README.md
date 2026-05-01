@@ -12,24 +12,41 @@ UtilityPlus is a comprehensive utility plugin for Minecraft servers, designed to
 - **Vanish:** Admin invisibility mode.
 - **Stats:** Track player kills and deaths with a leaderboard GUI (`/topstats`).
 - **Chat Management:** Toggle global, team, or private message preferences.
+- **2b2t-Style Controls:** Ignore players, toggle death messages, and view queue lengths.
 - **Performance:** Includes custom TPS and CPU monitors (`/tpsmore`).
-- **Admin Tools:** Broadcast, Gamemode shortcuts, Summon, and Reload commands.
+- **Admin Tools:** Overclock items, see inventories/enderchests, and managed shutdown.
 
 ## 📋 Commands & Permissions
 
-| Command | Description | Permission |
-|---------|-------------|------------|
-| `/spawn` | Teleport to spawn | `utilityplus.spawn` |
-| `/setspawn` | Set server spawn | `utilityplus.setspawn` (OP) |
-| `/home [1-4]` | Teleport to or list homes | `utilityplus.home` |
-| `/sethome <1-4>` | Set a home slot | `utilityplus.sethome` |
-| `/tpa <player>` | Request teleport | `utilityplus.tpa` |
-| `/team` | Team management | `utilityplus.team` |
-| `/v` | Toggle vanish | `utilityplus.vanish` (OP) |
-| `/topstats` | View leaderboard GUI | `utilityplus.topstats` |
-| `/tpsmore` | Detailed performance info | `utilityplus.tpsmore` (OP) |
+| Command | Description | Permission | Default |
+|---------|-------------|------------|---------|
+| `/spawn` | Teleport to spawn | `utilityplus.spawn` | True |
+| `/setspawn` | Set server spawn | `utilityplus.setspawn` | OP |
+| `/home [1-4]` | Teleport to or list homes | `utilityplus.home` | True |
+| `/sethome <1-4>` | Set a home slot | `utilityplus.sethome` | True |
+| `/delhome <1-4>` | Delete a home slot | `utilityplus.delhome` | True |
+| `/tpa <player>` | Request teleport to player | `utilityplus.tpa` | True |
+| `/tpahere <player>` | Request player teleport to you | `utilityplus.tpa` | True |
+| `/tpaccept` | Accept teleport request | `utilityplus.tpa` | True |
+| `/tpdeny` | Deny teleport request | `utilityplus.tpa` | True |
+| `/team` | Team management | `utilityplus.team` | True |
+| `/msg <player> <msg>` | Send a private message | `utilityplus.pm` | True |
+| `/r <msg>` | Reply to last message | `utilityplus.pm` | True |
+| `/ignore <player>` | Temporarily ignore a player | `utilityplus.chat` | True |
+| `/v` | Toggle vanish | `utilityplus.vanish` | OP |
+| `/bc <msg>` | Broadcast a message | `utilityplus.broadcast` | OP |
+| `/gmc` | Set gamemode to Creative | `utilityplus.gamemode` | OP |
+| `/gms` | Set gamemode to Survival | `utilityplus.gamemode` | OP |
+| `/kill [player]` | Kill yourself or others | `utilityplus.kill` | True |
+| `/overclock` | Overclock held item | `utilityplus.overclock` | OP |
+| `/invsee <player>` | See player inventory | `utilityplus.invsee` | OP |
+| `/s <player>` | Summon player | `utilityplus.summon` | OP |
+| `/topstats` | View leaderboard GUI | `utilityplus.topstats` | True |
+| `/tpsmore` | Detailed performance info | `utilityplus.tpsmore` | OP |
+| `/upreload` | Reload plugin | `utilityplus.reload` | OP |
+| `/stopnow` | Managed server shutdown | `server.stop` | OP |
 
-*Full list of commands and permissions can be found in `plugin.yml`.*
+*Use `/helps` in-game for a full list of commands.*
 
 ## 🛠️ Installation
 
