@@ -1,6 +1,6 @@
 name: UtilityPlus
 version: ${version}
-main: com.example.utilityplus.UtilityPlus
+main: zeb.deluxeg4.utilityplus.UtilityPlus
 api-version: '1.21'
 folia-supported: true
 description: Spawn, homes, TPA, chat, teams, stats, and admin utilities
@@ -201,6 +201,25 @@ commands:
     usage: /kill [player]
     permission: utilityplus.kill
 
+  stopnow:
+    description: Starts a shutdown countdown
+    usage: /stopnow <time|now|cancel|time>
+    permission: server.stop
+
+  overclock:
+    description: Overclock the item in your hand
+    usage: /overclock <enchant> <level> | /overclock 32k | /overclock name <name>
+    permission: utilityplus.overclock
+
+  invsee:
+    description: Open another player's inventory
+    usage: /invsee <player>
+    permission: utilityplus.invsee
+  enderchestsee:
+    description: Open another player's ender chest
+    usage: /enderchestsee <player>
+    permission: utilityplus.enderchestsee
+
   s:
     description: Summon a player to your location
     usage: /s <player>
@@ -287,6 +306,18 @@ permissions:
   utilityplus.kill:
     description: Kill yourself (needs confirmation)
     default: true
+  server.stop:
+    description: Allows starting the server shutdown countdown
+    default: op
+  utilityplus.overclock:
+    description: Overclock items and apply unsafe enchantments
+    default: op
+  utilityplus.invsee:
+    description: Open another player's inventory
+    default: op
+  utilityplus.enderchestsee:
+    description: Open another player's ender chest
+    default: op
   utilityplus.stats:
     description: View kills and deaths
     default: true
