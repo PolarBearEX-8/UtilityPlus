@@ -1,7 +1,6 @@
 package zeb.deluxeg4.utilityplus.managers;
 
 import zeb.deluxeg4.utilityplus.UtilityPlus;
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.HeightMap;
 import org.bukkit.Location;
@@ -11,6 +10,7 @@ import org.bukkit.WorldBorder;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
+
+// Folia imports (optional - only used if Folia is detected)
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 
 public class SpawnManager {
 
@@ -29,7 +34,6 @@ public class SpawnManager {
     private Location spawnLocation;
 
     // If the world wasn't loaded yet during onEnable, we store its name here
-    // and resolve it lazily on first use or via WorldLoadEvent
     private String pendingWorldName = null;
 
     // Config flags
@@ -46,7 +50,21 @@ public class SpawnManager {
     private int rtpAttempts;
     private String rtpWorldName;
 
-    private static final Set<Material> UNSAFE_RANDOM_RESPAWN_GROUND = EnumSet.of(
+    // ---------------------------------------------------------------
+    // RTP Location Pool (Folia-safe pre-generation)
+    // ---------------------------------------------------------------
+    private final ConcurrentLinkedQueue<Location> rtpLocationPool = new ConcurrentLinkedQueue<>();
+
+    // จำนวน location ที่ต้องการเก็บไว้ใน pool
+    private static final int POOL_TARGET_SIZE = 20;
+
+    // ป้องกัน refill ซ้อนกัน
+    private final AtomicInteger pendingRefillCount = new AtomicInteger(0);
+
+    // ---------------------------------------------------------------
+    // Unsafe ground types for RTP
+    // ---------------------------------------------------------------
+    private static final Set<Material> UNSAFE_GROUND = EnumSet.of(
             Material.CACTUS,
             Material.CAMPFIRE,
             Material.FIRE,
@@ -62,17 +80,41 @@ public class SpawnManager {
     // Cooldown tracker: UUID -> last /spawn use timestamp (ms)
     private final Map<UUID, Long> cooldowns = new HashMap<>();
 
-    // Warmup task tracker: UUID -> active warmup task
+    // Warmup task tracker: UUID -> active warmup task (Folia)
     private final Map<UUID, ScheduledTask> warmupTasks = new HashMap<>();
+    // Warmup task tracker for Paper/Bukkit
+    private final Map<UUID, BukkitTask> warmupTasksBukkit = new HashMap<>();
 
     // Tracks players who have joined before (persisted in spawn.yml)
-    // We store them as a list so first-join detection survives restarts
     private final java.util.Set<UUID> knownPlayers = new java.util.HashSet<>();
+
+    // Platform detection
+    private final boolean isFolia;
 
     public SpawnManager(UtilityPlus plugin) {
         this.plugin = plugin;
+        this.isFolia = detectFolia();
         readConfig();
         loadData();
+
+        // Start RTP pool only on Folia
+        if (isFolia) {
+            schedulePoolRefill(POOL_TARGET_SIZE);
+        }
+    }
+
+    private boolean detectFolia() {
+        try {
+            // Check for Folia's async scheduler method
+            Bukkit.class.getMethod("getAsyncScheduler");
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+
+    public boolean isFolia() {
+        return isFolia;
     }
 
     private void readConfig() {
@@ -83,10 +125,10 @@ public class SpawnManager {
         this.cooldownSeconds  = cfg.getInt    ("spawn.tp-spawn-cooldown",         30);
         this.warmupSeconds    = cfg.getInt    ("spawn.tp-spawn-warmup",           5);
 
-        this.rtpEnabled   = cfg.getBoolean("random-respawn.enabled", true);
-        this.rtpMinRadius = Math.max(0, cfg.getInt("random-respawn.min-radius", 50));
-        this.rtpMaxRadius = Math.max(rtpMinRadius, cfg.getInt("random-respawn.max-radius", 1000));
-        this.rtpAttempts  = Math.max(1, cfg.getInt("random-respawn.attempts", 48));
+        this.rtpEnabled   = cfg.getBoolean("random-respawn.enabled",      true);
+        this.rtpMinRadius = Math.max(0,             cfg.getInt("random-respawn.min-radius", 50));
+        this.rtpMaxRadius = Math.max(rtpMinRadius,  cfg.getInt("random-respawn.max-radius", 1000));
+        this.rtpAttempts  = Math.max(1,             cfg.getInt("random-respawn.attempts",   48));
         this.rtpWorldName = cfg.getString("random-respawn.world", "world");
     }
 
@@ -114,14 +156,13 @@ public class SpawnManager {
                 spawnLocation = buildLocation(world);
                 plugin.getLogger().info("[SpawnManager] Spawn loaded at " + worldName);
             } else {
-                // World not loaded yet — save name and resolve later
                 pendingWorldName = worldName;
                 plugin.getLogger().warning("[SpawnManager] World '" + worldName
                         + "' not loaded yet — spawn will be resolved when the world loads.");
             }
         }
 
-        // Load known players (for first-join detection)
+        // Load known players
         if (dataConfig.contains("known-players")) {
             for (String uuidStr : dataConfig.getStringList("known-players")) {
                 try { knownPlayers.add(UUID.fromString(uuidStr)); }
@@ -130,10 +171,6 @@ public class SpawnManager {
         }
     }
 
-    /**
-     * Called by SpawnListener on WorldLoadEvent.
-     * Resolves the spawn location if the world was not ready during onEnable.
-     */
     public boolean tryResolvePendingWorld(String loadedWorldName) {
         if (pendingWorldName == null) return false;
         if (!pendingWorldName.equalsIgnoreCase(loadedWorldName)) return false;
@@ -141,7 +178,7 @@ public class SpawnManager {
         World world = Bukkit.getWorld(loadedWorldName);
         if (world == null) return false;
 
-        spawnLocation = buildLocation(world);
+        spawnLocation    = buildLocation(world);
         pendingWorldName = null;
         plugin.getLogger().info("[SpawnManager] Spawn location resolved after world load: " + loadedWorldName);
         return true;
@@ -172,7 +209,6 @@ public class SpawnManager {
             dataConfig.set("spawn.pitch", (double) spawnLocation.getPitch());
         }
 
-        // Persist known-players list
         java.util.List<String> uuidList = new java.util.ArrayList<>();
         for (UUID uuid : knownPlayers) uuidList.add(uuid.toString());
         dataConfig.set("known-players", uuidList);
@@ -222,44 +258,56 @@ public class SpawnManager {
         }
     }
 
-    public int getCooldownSeconds() {
-        return cooldownSeconds;
-    }
-
-    public int getWarmupSeconds() {
-        return warmupSeconds;
-    }
+    public int getCooldownSeconds()  { return cooldownSeconds; }
+    public int getWarmupSeconds()    { return warmupSeconds; }
 
     // ---------------------------------------------------------------
-    // Warmup task management
+    // Warmup task management (Hybrid Folia/Paper)
     // ---------------------------------------------------------------
 
-    public void startWarmup(UUID uuid, ScheduledTask task) {
+    public void startWarmup(UUID uuid, Object task) {
         cancelWarmup(uuid);
-        warmupTasks.put(uuid, task);
+        if (isFolia && task instanceof ScheduledTask) {
+            warmupTasks.put(uuid, (ScheduledTask) task);
+        } else if (!isFolia && task instanceof BukkitTask) {
+            warmupTasksBukkit.put(uuid, (BukkitTask) task);
+        }
     }
 
     public void cancelWarmup(UUID uuid) {
-        ScheduledTask t = warmupTasks.remove(uuid);
-        if (t != null) t.cancel();
+        if (isFolia) {
+            ScheduledTask t = warmupTasks.remove(uuid);
+            if (t != null) t.cancel();
+        } else {
+            BukkitTask t = warmupTasksBukkit.remove(uuid);
+            if (t != null) t.cancel();
+        }
     }
 
     public boolean hasWarmup(UUID uuid) {
-        return warmupTasks.containsKey(uuid);
+        if (isFolia) {
+            return warmupTasks.containsKey(uuid);
+        } else {
+            return warmupTasksBukkit.containsKey(uuid);
+        }
     }
 
-    public UtilityPlus getPlugin() {
-        return plugin;
-    }
+    public UtilityPlus getPlugin() { return plugin; }
 
     /** Called by ReloadCommand — re-reads spawn.yml and config values. */
     public void reload() {
-        spawnLocation   = null;
+        spawnLocation    = null;
         pendingWorldName = null;
         knownPlayers.clear();
+        rtpLocationPool.clear();
+        pendingRefillCount.set(0);
         readConfig();
         loadData();
-        plugin.getLogger().info("[SpawnManager] Reloaded.");
+
+        // Re-generate pool หลัง reload (Folia only)
+        if (isFolia) {
+            schedulePoolRefill(POOL_TARGET_SIZE);
+        }
     }
 
     // ---------------------------------------------------------------
@@ -271,7 +319,122 @@ public class SpawnManager {
     public boolean isTpNoRespawnPoint() { return tpNoRespawnPoint; }
     public boolean isRtpEnabled()       { return rtpEnabled; }
 
+    // ---------------------------------------------------------------
+    // Random Respawn Location — Hybrid Folia (async pool) / Paper (sync)
+    // ---------------------------------------------------------------
+
+    /**
+     * Get random respawn location — uses pool on Folia, sync generation on Paper/Bukkit
+     */
     public Location getRandomLocation() {
+        if (isFolia) {
+            return getRandomLocationFolia();
+        } else {
+            return getRandomLocationPaper();
+        }
+    }
+
+    // ==================== FOLIA: Async Pool-based ====================
+
+    private Location getRandomLocationFolia() {
+        Location loc = rtpLocationPool.poll();
+        int poolSize = rtpLocationPool.size();
+
+        int need = POOL_TARGET_SIZE - poolSize - pendingRefillCount.get();
+        if (need > 0) {
+            schedulePoolRefill(need);
+        }
+
+        if (loc != null) {
+            return loc;
+        }
+
+        return null;
+    }
+
+    public Location pollFromPool() {
+        if (!isFolia) return null;
+        Location loc = rtpLocationPool.poll();
+        int need = POOL_TARGET_SIZE - rtpLocationPool.size() - pendingRefillCount.get();
+        if (need > 0) schedulePoolRefill(need);
+        return loc;
+    }
+
+    private void schedulePoolRefill(int count) {
+        if (!rtpEnabled || !isFolia) return;
+
+        for (int i = 0; i < count; i++) {
+            pendingRefillCount.incrementAndGet();
+            plugin.getServer().getAsyncScheduler().runNow(plugin, task -> {
+                World world = Bukkit.getWorld(rtpWorldName);
+                if (world == null) world = Bukkit.getWorlds().get(0);
+                if (world == null) {
+                    pendingRefillCount.decrementAndGet();
+                    return;
+                }
+                generateAndAddToPool(world, 0);
+            });
+        }
+    }
+
+    private void generateAndAddToPool(World world, int attempt) {
+        if (attempt >= rtpAttempts) {
+            pendingRefillCount.decrementAndGet();
+            return;
+        }
+
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        double angle = random.nextDouble() * 2.0 * Math.PI;
+        double minR2 = (double) rtpMinRadius * rtpMinRadius;
+        double maxR2 = (double) rtpMaxRadius * rtpMaxRadius;
+        double distance = Math.sqrt(minR2 + random.nextDouble() * (maxR2 - minR2));
+
+        Location center = world.getSpawnLocation();
+        int x = center.getBlockX() + (int) Math.round(Math.cos(angle) * distance);
+        int z = center.getBlockZ() + (int) Math.round(Math.sin(angle) * distance);
+
+        if (!isInsideWorldBorder(world, x, z)) {
+            plugin.getServer().getAsyncScheduler().runNow(plugin, t ->
+                    generateAndAddToPool(world, attempt + 1));
+            return;
+        }
+
+        final World finalWorld = world;
+        final int finalX = x;
+        final int finalZ = z;
+
+        world.getChunkAtAsync(x >> 4, z >> 4).whenComplete((chunk, ex) -> {
+            if (ex != null || chunk == null) {
+                plugin.getServer().getAsyncScheduler().runNow(plugin, t ->
+                        generateAndAddToPool(finalWorld, attempt + 1));
+                return;
+            }
+
+            plugin.getServer().getRegionScheduler().execute(plugin,
+                    finalWorld, finalX >> 4, finalZ >> 4, () -> {
+                try {
+                    Location loc = finalWorld
+                            .getHighestBlockAt(finalX, finalZ, HeightMap.MOTION_BLOCKING_NO_LEAVES)
+                            .getLocation()
+                            .add(0.5, 1, 0.5);
+
+                    if (isSafeLocation(loc)) {
+                        loc.setYaw(ThreadLocalRandom.current().nextFloat() * 360.0F);
+                        loc.setPitch(0.0F);
+                        rtpLocationPool.offer(loc);
+                    }
+                    pendingRefillCount.decrementAndGet();
+                } catch (Exception regionEx) {
+                    plugin.getServer().getAsyncScheduler().runNow(plugin, t ->
+                            generateAndAddToPool(finalWorld, attempt + 1));
+                }
+            });
+        });
+    }
+
+    // ==================== PAPER/BUKKIT: Sync Generation ====================
+
+    private Location getRandomLocationPaper() {
         World world = Bukkit.getWorld(rtpWorldName);
         if (world == null) {
             world = Bukkit.getWorlds().get(0);
@@ -281,13 +444,12 @@ public class SpawnManager {
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
         for (int attempt = 0; attempt < rtpAttempts; attempt++) {
-            // Polar coordinates for uniform distribution in the ring
-            // θ: 0 to 2π, r: rtpMinRadius to rtpMaxRadius
             double theta = random.nextDouble(0, Math.PI * 2);
             double r = randomRadius(random);
 
             int x = center.getBlockX() + (int) Math.round(r * Math.cos(theta));
             int z = center.getBlockZ() + (int) Math.round(r * Math.sin(theta));
+
             if (!isInsideWorldBorder(world, x, z)) {
                 continue;
             }
@@ -311,7 +473,6 @@ public class SpawnManager {
                 && spawnLocation.getWorld().getName().equals(world.getName())) {
             return spawnLocation;
         }
-
         return world.getSpawnLocation();
     }
 
@@ -319,36 +480,32 @@ public class SpawnManager {
         if (rtpMaxRadius <= rtpMinRadius) {
             return rtpMinRadius;
         }
-
         double minSquared = (double) rtpMinRadius * rtpMinRadius;
         double maxSquared = (double) rtpMaxRadius * rtpMaxRadius;
         return Math.sqrt(random.nextDouble(minSquared, maxSquared));
     }
 
+
     private boolean isInsideWorldBorder(World world, int x, int z) {
         WorldBorder border = world.getWorldBorder();
-        Location center = border.getCenter();
-        double radius = border.getSize() / 2.0D;
+        Location center   = border.getCenter();
+        double radius     = border.getSize() / 2.0D;
 
-        return x + 0.5D >= center.getX() - radius
-                && x + 0.5D <= center.getX() + radius
-                && z + 0.5D >= center.getZ() - radius
-                && z + 0.5D <= center.getZ() + radius;
+        return (x + 0.5D) >= center.getX() - radius
+                && (x + 0.5D) <= center.getX() + radius
+                && (z + 0.5D) >= center.getZ() - radius
+                && (z + 0.5D) <= center.getZ() + radius;
     }
 
     private boolean isSafeLocation(Location loc) {
         World world = loc.getWorld();
-        if (world == null) {
-            return false;
-        }
+        if (world == null) return false;
 
         int y = loc.getBlockY();
-        if (y <= world.getMinHeight() || y + 1 >= world.getMaxHeight()) {
-            return false;
-        }
+        if (y <= world.getMinHeight() || y + 1 >= world.getMaxHeight()) return false;
 
-        Block feet = loc.getBlock();
-        Block head = loc.clone().add(0, 1, 0).getBlock();
+        Block feet   = loc.getBlock();
+        Block head   = loc.clone().add(0, 1, 0).getBlock();
         Block ground = loc.clone().add(0, -1, 0).getBlock();
         Material groundType = ground.getType();
 
@@ -356,22 +513,20 @@ public class SpawnManager {
                 && head.isPassable()
                 && groundType.isSolid()
                 && !ground.isLiquid()
-                && !UNSAFE_RANDOM_RESPAWN_GROUND.contains(groundType);
+                && !UNSAFE_GROUND.contains(groundType);
     }
 
     // ---------------------------------------------------------------
     // First-join tracking
     // ---------------------------------------------------------------
 
-    /** Returns true if this is the player's first time joining the server. */
     public boolean isFirstJoin(UUID uuid) {
         return !knownPlayers.contains(uuid);
     }
 
-    /** Mark a player as having joined before. */
     public void markKnown(UUID uuid) {
         if (knownPlayers.add(uuid)) {
-            saveData(); // persist immediately so restarts don't re-trigger
+            saveData();
         }
     }
 }

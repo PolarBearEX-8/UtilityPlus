@@ -24,16 +24,16 @@
     "%killer% converted %victim% into loot"
   ],
   "player_using_item": [
-    "%victim% got erased by %killer%'s %weapon%",
-    "%killer% used %weapon% to write %victim%'s obituary",
-    "%victim% met %weapon% and did not survive the introduction",
-    "%killer%'s %weapon% turned %victim% into floor loot",
-    "%victim% got audited by %weapon%",
-    "%killer% made %weapon% everyone else's problem",
-    "%victim% learned why %weapon% has a name",
-    "%weapon% claimed %victim% for the archive",
-    "%killer% clicked once and %weapon% handled the paperwork",
-    "%victim% got signed out by %killer%'s %weapon%"
+    "%victim% got erased by %killer%",
+    "%killer% used a named weapon to write %victim%'s obituary",
+    "%victim% met %killer%'s legendary weapon and did not survive",
+    "%killer%'s weapon turned %victim% into floor loot",
+    "%victim% got audited by %killer%'s named weapon",
+    "%killer% made their weapon everyone else's problem",
+    "%victim% learned why %killer%'s weapon has a name",
+    "%killer%'s legendary weapon claimed %victim% for the archive",
+    "%killer% clicked once and their weapon handled %victim%",
+    "%victim% got signed out by %killer%"
   ],
   "mob_kill": [
     "%victim% got bullied by wildlife",

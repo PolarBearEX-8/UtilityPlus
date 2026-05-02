@@ -69,7 +69,7 @@ def foliaRunDir = file("run-folia")
 
 // Winds-Studio/Leaf Configuration
 def leafVersion = "1.21.11"
-def leafBuild = "121"
+def leafBuild = "125"
 def leafJarName = "leaf-${leafVersion}-${leafBuild}.jar"
 def leafDownloadUrl = "https://api.leafmc.one/v2/projects/leaf/versions/${leafVersion}/builds/${leafBuild}/downloads/${leafJarName}"
 def serverDir = file("run")

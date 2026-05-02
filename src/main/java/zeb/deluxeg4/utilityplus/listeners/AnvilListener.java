@@ -10,6 +10,7 @@ import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Allows players to use & color codes and special symbols when renaming
@@ -27,19 +28,27 @@ import org.bukkit.inventory.meta.ItemMeta;
  *   {cross}  → ✘   {dot}    → •   {diamond} → ◆
  *   {sword}  → ⚔   {shield} → 🛡  {fire}   → 🔥
  *
- * Permission: utilityplus.anvil.color (default: true)
+ * Config: anvil-color.enabled (default: true)
  */
 public class AnvilListener implements Listener {
+
+    private final JavaPlugin plugin;
 
     // Result slot index in an anvil inventory
     private static final int RESULT_SLOT = 2;
 
+    public AnvilListener(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    private boolean isEnabled() {
+        return plugin.getConfig().getBoolean("anvil-color.enabled", true);
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareAnvil(PrepareAnvilEvent event) {
+        if (!isEnabled()) return;
         if (!(event.getView().getPlayer() instanceof Player)) return;
-        Player player = (Player) event.getView().getPlayer();
-
-        if (!player.hasPermission("utilityplus.anvil.color")) return;
 
         ItemStack result = event.getResult();
         if (result == null || !result.hasItemMeta()) return;
@@ -60,11 +69,10 @@ public class AnvilListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onAnvilClick(InventoryClickEvent event) {
+        if (!isEnabled()) return;
         if (!(event.getWhoClicked() instanceof Player)) return;
         if (!(event.getInventory() instanceof AnvilInventory)) return;
 
-        Player player = (Player) event.getWhoClicked();
-        if (!player.hasPermission("utilityplus.anvil.color")) return;
         if (event.getRawSlot() != RESULT_SLOT) return;
 
         ItemStack result = event.getCurrentItem();

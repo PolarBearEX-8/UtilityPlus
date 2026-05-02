@@ -136,7 +136,7 @@ public class UtilityPlus extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new HomeGUIListener(homeManager), this);
         getServer().getPluginManager().registerEvents(new TPAListener(tpaManager), this);
         getServer().getPluginManager().registerEvents(new ChatListener(chatManager, teamManager), this);
-        getServer().getPluginManager().registerEvents(new AnvilListener(), this);
+        getServer().getPluginManager().registerEvents(new AnvilListener(this), this);
         getServer().getPluginManager().registerEvents(new TeamListener(teamManager), this);
         getServer().getPluginManager().registerEvents(new JoinMessageListener(this), this);
         getServer().getPluginManager().registerEvents(new StatsListener(statsManager, chatManager, deathMessageManager, this), this);
